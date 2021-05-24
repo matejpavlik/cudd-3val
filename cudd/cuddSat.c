@@ -122,7 +122,8 @@ Cudd_Eval(
   int * inputs)
 {
     int comple;
-    DdNode *ptr;
+    DdNode *ptr, *unknown;
+    unknown = DD_UNKNOWN(dd);
 
     (void) dd; /* avoid warning */
     comple = Cudd_IsComplement(f);
@@ -136,7 +137,7 @@ Cudd_Eval(
 	    ptr = Cudd_Regular(cuddE(ptr));
 	}
     }
-    return(Cudd_NotCond(ptr,comple));
+    return(Cudd_NotCond(ptr,comple && ptr != unknown));
 
 } /* end of Cudd_Eval */
 

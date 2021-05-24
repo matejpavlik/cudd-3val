@@ -142,6 +142,9 @@ Cudd_Init(
     unique->zero = cuddUniqueConst(unique,0.0);
     if (unique->zero == NULL) return(0);
     cuddRef(unique->zero);
+    unique->unknown = cuddUniqueConst(unique,0.5);
+    if (unique->unknown == NULL) return(0);
+    cuddRef(unique->unknown);
 #ifdef HAVE_IEEE_754
     if (DD_PLUS_INF_VAL != DD_PLUS_INF_VAL * 3 ||
 	DD_PLUS_INF_VAL != DD_PLUS_INF_VAL / 3) {

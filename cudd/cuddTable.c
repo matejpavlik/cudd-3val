@@ -43,6 +43,8 @@
 
 */
 
+#include <assert.h>
+
 #include "util.h"
 #include "mtrInt.h"
 #include "cuddInt.h"
@@ -1121,6 +1123,11 @@ cuddUniqueInter(
   DdNode * T,
   DdNode * E)
 {
+#ifdef DD_DEBUG
+    assert(Cudd_Regular(T) == T);
+    assert(T != DD_UNKNOWN(unique) || Cudd_Regular(E) == E);
+#endif
+
     int pos;
     unsigned int level;
     int retval;

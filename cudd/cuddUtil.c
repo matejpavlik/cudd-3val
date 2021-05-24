@@ -1296,12 +1296,14 @@ Cudd_CountLeaves(
 
   @details The cube is written into an array of characters.  The array
   must have at least as many entries as there are variables.
+  The BDD must contain only targets [0], [1].
+  Undefined behavior on BDDs with [?].
 
   @return 1 if successful; 0 otherwise.
 
   @sideeffect None
 
-  @see Cudd_bddPickOneMinterm
+  @see Cudd_bddPickOneMinterm Cudd_bddPickOneCubeUnder Cudd_bddPickOneCubeOver
 
 */
 int
@@ -1327,32 +1329,157 @@ Cudd_bddPickOneCube(
 
     for (i = 0; i < ddm->size; i++) string[i] = 2;
 
-    for (;;) {
+    while (node != one) {
+        N = Cudd_Regular(node);
 
-	if (node == one) break;
-
-	N = Cudd_Regular(node);
-
-	T = cuddT(N); E = cuddE(N);
-	if (Cudd_IsComplement(node)) {
-	    T = Cudd_Not(T); E = Cudd_Not(E);
-	}
-	if (T == bzero) {
-	    string[N->index] = 0;
-	    node = E;
-	} else if (E == bzero) {
-	    string[N->index] = 1;
-	    node = T;
-	} else {
-	    dir = (char) ((Cudd_Random(ddm) & 0x2000) >> 13);
-	    string[N->index] = dir;
-	    node = dir ? T : E;
-	}
+        T = cuddT(N);
+        E = cuddE(N);
+        if (Cudd_IsComplement(node)) {
+            T = Cudd_Not(T);
+            E = Cudd_Not(E);
+        }
+        if (T == bzero) {
+            string[N->index] = 0;
+            node = E;
+        } else if (E == bzero) {
+            string[N->index] = 1;
+            node = T;
+        } else {
+            dir = (char) ((Cudd_Random(ddm) & 0x2000) >> 13);
+            string[N->index] = dir;
+            node = dir ? T : E;
+        }
     }
     return(1);
 
 } /* end of Cudd_bddPickOneCube */
 
+/**
+  @brief Picks one on-set cube randomly from the given %DD.
+
+  @details The cube is written into an array of characters.  The array
+  must have at least as many entries as there are variables.
+  The BDD must contain only targets [?], [1].
+  Undefined behavior on BDDs with [0].
+
+  @return 1 if successful; 0 otherwise.
+
+  @sideeffect None
+
+  @see Cudd_bddPickOneMinterm Cudd_bddPickOneCube Cudd_bddPickOneCubeOver
+
+*/
+int
+Cudd_bddPickOneCubeUnder(
+        DdManager * ddm,
+        DdNode * node,
+        char * string)
+{
+    DdNode *N, *T, *E;
+    DdNode *one, *bzero, *unknown;
+    char   dir;
+    int    i;
+
+    if (string == NULL || node == NULL) return(0);
+
+    /* The constant 0 function has no on-set cubes. */
+    one = DD_ONE(ddm);
+    bzero = Cudd_Not(one);
+    unknown = DD_UNKNOWN(ddm);
+    if (node == unknown) {
+        ddm->errorCode = CUDD_INVALID_ARG;
+        return(0);
+    }
+
+    for (i = 0; i < ddm->size; i++) string[i] = 2;
+
+    while (node != one) {
+        N = Cudd_Regular(node);
+
+        T = cuddT(N);
+        E = cuddE(N);
+        if (Cudd_IsComplement(node)) {
+            T = Cudd_NotCond(T, T != unknown);
+            E = Cudd_NotCond(E, E != unknown);
+        }
+        if (T == unknown) {
+            string[N->index] = 0;
+            node = E;
+        } else if (E == unknown) {
+            string[N->index] = 1;
+            node = T;
+        } else {
+            dir = (char) ((Cudd_Random(ddm) & 0x2000) >> 13);
+            string[N->index] = dir;
+            node = dir ? T : E;
+        }
+    }
+    return(1);
+
+} /* end of Cudd_bddPickOneCubeUnder */
+
+/**
+  @brief Picks one on-set cube (targeting in [?]) randomly from the given %DD.
+
+  @details The cube is written into an array of characters.  The array
+  must have at least as many entries as there are variables.
+  The BDD must contain only targets [0], [?].
+
+  @return 1 if successful; 0 otherwise.
+
+  @sideeffect None
+
+  @see Cudd_bddPickOneMinterm Cudd_bddPickOneCube Cudd_bddPickOneCubeUnder
+
+*/
+int
+Cudd_bddPickOneCubeOver(
+        DdManager * ddm,
+        DdNode * node,
+        char * string)
+{
+    DdNode *N, *T, *E;
+    DdNode *one, *bzero, *unknown;
+    char   dir;
+    int    i;
+
+    if (string == NULL || node == NULL) return(0);
+
+    /* The constant 0 function has no on-set cubes. */
+    one = DD_ONE(ddm);
+    bzero = Cudd_Not(one);
+    unknown = DD_UNKNOWN(ddm);
+    if (node == bzero) {
+        ddm->errorCode = CUDD_INVALID_ARG;
+        return(0);
+    }
+
+    for (i = 0; i < ddm->size; i++) string[i] = 2;
+
+    while (node != unknown) {
+        N = Cudd_Regular(node);
+
+        T = cuddT(N);
+        E = cuddE(N);
+        if (Cudd_IsComplement(node)) {
+            T = Cudd_NotCond(T, T != unknown);
+            E = Cudd_NotCond(E, E != unknown);
+        }
+        if (T == bzero) {
+            string[N->index] = 0;
+            node = E;
+        } else if (E == bzero) {
+            string[N->index] = 1;
+            node = T;
+        } else {
+            dir = (char) ((Cudd_Random(ddm) & 0x2000) >> 13);
+            string[N->index] = dir;
+            node = dir ? T : E;
+        }
+    }
+    return(1);
+
+} /* end of Cudd_bddPickOneCubeOver */
 
 /**
   @brief Picks one on-set minterm randomly from the given %DD.
@@ -1372,7 +1499,7 @@ Cudd_bddPickOneCube(
 
   @sideeffect None
 
-  @see Cudd_bddPickOneCube
+  @see Cudd_bddPickOneCube Cudd_bddPickOneMintermGeneral
 
 */
 DdNode *
@@ -1380,8 +1507,7 @@ Cudd_bddPickOneMinterm(
   DdManager * dd /**< manager */,
   DdNode * f /**< function from which to pick one minterm */,
   DdNode ** vars /**< array of variables */,
-  int  n /**< size of <code>vars</code> */)
-{
+  int  n /**< size of <code>vars</code> */) {
     char *string;
     int i, size;
     int *indices;
@@ -1391,57 +1517,57 @@ Cudd_bddPickOneMinterm(
     size = dd->size;
     string = ALLOC(char, size);
     if (string == NULL) {
-	dd->errorCode = CUDD_MEMORY_OUT;
-	return(NULL);
+        dd->errorCode = CUDD_MEMORY_OUT;
+        return (NULL);
     }
-    indices = ALLOC(int,n);
+    indices = ALLOC(int, n);
     if (indices == NULL) {
-	dd->errorCode = CUDD_MEMORY_OUT;
-	FREE(string);
-	return(NULL);
+        dd->errorCode = CUDD_MEMORY_OUT;
+        FREE(string);
+        return (NULL);
     }
 
     for (i = 0; i < n; i++) {
-	indices[i] = vars[i]->index;
+        indices[i] = vars[i]->index;
     }
 
-    result = Cudd_bddPickOneCube(dd,f,string);
+    result = Cudd_bddPickOneCube(dd, f, string);
     if (result == 0) {
-	FREE(string);
-	FREE(indices);
-	return(NULL);
+        FREE(string);
+        FREE(indices);
+        return (NULL);
     }
 
     /* Randomize choice for don't cares. */
     for (i = 0; i < n; i++) {
-	if (string[indices[i]] == 2)
-	    string[indices[i]] = (char) ((Cudd_Random(dd) & 0x20) >> 5);
+        if (string[indices[i]] == 2)
+            string[indices[i]] = (char) ((Cudd_Random(dd) & 0x20) >> 5);
     }
 
     /* Build result BDD. */
     old = Cudd_ReadOne(dd);
     cuddRef(old);
 
-    for (i = n-1; i >= 0; i--) {
-	neW = Cudd_bddAnd(dd,old,Cudd_NotCond(vars[i],string[indices[i]]==0));
-	if (neW == NULL) {
-	    FREE(string);
-	    FREE(indices);
-	    Cudd_RecursiveDeref(dd,old);
-	    return(NULL);
-	}
-	cuddRef(neW);
-	Cudd_RecursiveDeref(dd,old);
-	old = neW;
+    for (i = n - 1; i >= 0; i--) {
+        neW = Cudd_bddAnd(dd, old, Cudd_NotCond(vars[i], string[indices[i]] == 0));
+        if (neW == NULL) {
+            FREE(string);
+            FREE(indices);
+            Cudd_RecursiveDeref(dd, old);
+            return (NULL);
+        }
+        cuddRef(neW);
+        Cudd_RecursiveDeref(dd, old);
+        old = neW;
     }
 
 #ifdef DD_DEBUG
     /* Test. */
     if (Cudd_bddLeq(dd,old,f)) {
-	cuddDeref(old);
+    cuddDeref(old);
     } else {
-	Cudd_RecursiveDeref(dd,old);
-	old = NULL;
+    Cudd_RecursiveDeref(dd,old);
+    old = NULL;
     }
 #else
     cuddDeref(old);
@@ -1449,10 +1575,110 @@ Cudd_bddPickOneMinterm(
 
     FREE(string);
     FREE(indices);
-    return(old);
+    return (old);
 
 }  /* end of Cudd_bddPickOneMinterm */
 
+/**
+  @brief Picks one on-set minterm randomly from the given %DD.
+
+  @details The minterm is in terms of <code>vars</code>. The array
+  <code>vars</code> should contain at least all variables in the
+  support of <code>f</code>; if this condition is not met the minterm
+  built by this procedure may not be contained in <code>f</code>.
+  The function <code>pickOneCube</code> is used to pick a cube from
+  the given function.
+
+  @return a pointer to the %BDD for the minterm if successful; NULL otherwise.
+  There are three reasons why the procedure may fail:
+  <ul>
+  <li> It may run out of memory;
+  <li> the function <code>f</code> may be the constant 0;
+  <li> the minterm may not be contained in <code>f</code>.
+  </ul>
+
+  @sideeffect None
+
+  @see Cudd_bddPickOneCube Cudd_bddPickOneMinterm
+
+*/
+DdNode *
+Cudd_bddPickOneMintermGeneral(
+        DdManager * dd /**< manager */,
+        DdNode * f /**< function from which to pick one minterm */,
+        DdNode ** vars /**< array of variables */,
+        int  n /**< size of <code>vars</code> */,
+        int (*pickOneCube)(DdManager *, DdNode *, char *)) {
+    char *string;
+    int i, size;
+    int *indices;
+    int result;
+    DdNode *old, *neW;
+
+    size = dd->size;
+    string = ALLOC(char, size);
+    if (string == NULL) {
+        dd->errorCode = CUDD_MEMORY_OUT;
+        return (NULL);
+    }
+    indices = ALLOC(int, n);
+    if (indices == NULL) {
+        dd->errorCode = CUDD_MEMORY_OUT;
+        FREE(string);
+        return (NULL);
+    }
+
+    for (i = 0; i < n; i++) {
+        indices[i] = vars[i]->index;
+    }
+
+    result = pickOneCube(dd, f, string);
+    if (result == 0) {
+        FREE(string);
+        FREE(indices);
+        return (NULL);
+    }
+
+    /* Randomize choice for don't cares. */
+    for (i = 0; i < n; i++) {
+        if (string[indices[i]] == 2)
+            string[indices[i]] = (char) ((Cudd_Random(dd) & 0x20) >> 5);
+    }
+
+    /* Build result BDD. */
+    old = Cudd_ReadOne(dd);
+    cuddRef(old);
+
+    for (i = n - 1; i >= 0; i--) {
+        neW = Cudd_bddAnd(dd, old, Cudd_NotCond(vars[i], string[indices[i]] == 0));
+        if (neW == NULL) {
+            FREE(string);
+            FREE(indices);
+            Cudd_RecursiveDeref(dd, old);
+            return (NULL);
+        }
+        cuddRef(neW);
+        Cudd_RecursiveDeref(dd, old);
+        old = neW;
+    }
+
+#ifdef DD_DEBUG
+    /* Test. */
+    if (Cudd_bddLeq(dd,old,f)) {
+    cuddDeref(old);
+    } else {
+    Cudd_RecursiveDeref(dd,old);
+    old = NULL;
+    }
+#else
+    cuddDeref(old);
+#endif
+
+    FREE(string);
+    FREE(indices);
+    return (old);
+
+}  /* end of Cudd_bddPickOneMintermGeneral */
 
 /**
   @brief Picks k on-set minterms evenly distributed from given %DD.

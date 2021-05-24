@@ -1358,6 +1358,25 @@ Cudd_ReadLogicZero(
 
 
 /**
+  @brief Returns the unknown constant of the manager.
+
+  @details Unknown constant for BDDs.
+
+  @sideeffect None
+
+  @see Cudd_ReadOne Cudd_ReadLogicZero
+
+*/
+DdNode *
+Cudd_ReadUnknown(
+        DdManager * dd)
+{
+    return(dd->unknown);
+
+} /* end of Cudd_ReadUnknown */
+
+
+/**
   @brief Reads the plus-infinity constant from the manager.
 
   @sideeffect None

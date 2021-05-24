@@ -2,6 +2,10 @@ The CUDD package is a package written in C for the manipulation of
 decision diagrams.  It supports binary decision diagrams (BDDs),
 algebraic decision diagrams (ADDs), and Zero-Suppressed BDDs (ZDDs).
 
+This version of the package (CUDD-3val) is extended with 3-valued BDD
+manipulation where support for the target 'unknown' is added. Details
+of the approach can be found at https://is.muni.cz/th/sg085/.
+
 This directory contains a set of packages that allow you to build a test
 application based on the CUDD package.
 
@@ -115,3 +119,8 @@ ECE Dept.
 Boulder, CO 80309-0425
 Fabio@Colorado.EDU
 http://vlsi.colorado.edu/~fabio
+
+Regarding 3-valued BDDs:
+
+Matej Pavlik
+matej.pavlik@mail.muni.cz

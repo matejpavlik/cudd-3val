@@ -228,7 +228,8 @@ Cudd_bddUnivAbstract(
   DdNode * f,
   DdNode * cube)
 {
-    DdNode	*res;
+    DdNode	*res, *unknown;
+    unknown = DD_UNKNOWN(manager);
 
     if (bddCheckPositiveCube(manager, cube) == 0) {
 	(void) fprintf(manager->err,
@@ -239,9 +240,9 @@ Cudd_bddUnivAbstract(
 
     do {
 	manager->reordered = 0;
-	res = cuddBddExistAbstractRecur(manager, Cudd_Not(f), cube);
+	res = cuddBddExistAbstractRecur(manager, Cudd_NotCond(f,f != unknown), cube);
     } while (manager->reordered == 1);
-    if (res != NULL) res = Cudd_Not(res);
+    if (res != NULL) res = Cudd_NotCond(res,res != unknown);
     if (manager->errorCode == CUDD_TIMEOUT_EXPIRED && manager->timeoutHandler) {
         manager->timeoutHandler(manager, manager->tohArg);
     }
@@ -374,27 +375,28 @@ cuddBddExistAbstractRecur(
   DdNode * f,
   DdNode * cube)
 {
-    DdNode	*F, *T, *E, *res, *res1, *res2, *one;
+    DdNode	*F, *T, *E, *res, *res1, *res2, *one, *unknown;
 
     statLine(manager);
     one = DD_ONE(manager);
+    unknown = DD_UNKNOWN(manager);
     F = Cudd_Regular(f);
 
-    /* Cube is guaranteed to be a cube at this point. */	
-    if (cube == one || F == one) {  
+    /* Cube is guaranteed to be a cube at this point. */
+    if (cube == one || F == one || F == unknown) {
         return(f);
     }
     /* From now on, f and cube are non-constant. */
 
     /* Abstract a variable that does not appear in f. */
     while (manager->perm[F->index] > manager->perm[cube->index]) {
-	cube = cuddT(cube);
-	if (cube == one) return(f);
+        cube = cuddT(cube);
+        if (cube == one) return(f);
     }
 
     /* Check the cache. */
     if (F->ref != 1 && (res = cuddCacheLookup2(manager, Cudd_bddExistAbstract, f, cube)) != NULL) {
-	return(res);
+        return(res);
     }
 
     checkWhetherToGiveUp(manager);
@@ -402,66 +404,66 @@ cuddBddExistAbstractRecur(
     /* Compute the cofactors of f. */
     T = cuddT(F); E = cuddE(F);
     if (f != F) {
-	T = Cudd_Not(T); E = Cudd_Not(E);
+        T = Cudd_NotCond(T,T != unknown); E = Cudd_NotCond(E,E != unknown);
     }
 
     /* If the two indices are the same, so are their levels. */
     if (F->index == cube->index) {
-	if (T == one || E == one || T == Cudd_Not(E)) {
-	    return(one);
-	}
-	res1 = cuddBddExistAbstractRecur(manager, T, cuddT(cube));
-	if (res1 == NULL) return(NULL);
-	if (res1 == one) {
-	    if (F->ref != 1)
-		cuddCacheInsert2(manager, Cudd_bddExistAbstract, f, cube, one);
-	    return(one);
-	}
+        if (T == one || E == one || T == Cudd_Not(E)) {
+            return(one);
+        }
+        res1 = cuddBddExistAbstractRecur(manager, T, cuddT(cube));
+        if (res1 == NULL) return(NULL);
+        if (res1 == one) {
+            if (F->ref != 1)
+                cuddCacheInsert2(manager, Cudd_bddExistAbstract, f, cube, one);
+            return(one);
+        }
         cuddRef(res1);
-	res2 = cuddBddExistAbstractRecur(manager, E, cuddT(cube));
-	if (res2 == NULL) {
-	    Cudd_IterDerefBdd(manager,res1);
-	    return(NULL);
-	}
+        res2 = cuddBddExistAbstractRecur(manager, E, cuddT(cube));
+        if (res2 == NULL) {
+            Cudd_IterDerefBdd(manager,res1);
+            return(NULL);
+        }
         cuddRef(res2);
-	res = cuddBddAndRecur(manager, Cudd_Not(res1), Cudd_Not(res2));
-	if (res == NULL) {
-	    Cudd_IterDerefBdd(manager, res1);
-	    Cudd_IterDerefBdd(manager, res2);
-	    return(NULL);
-	}
-	res = Cudd_Not(res);
-	cuddRef(res);
-	Cudd_IterDerefBdd(manager, res1);
-	Cudd_IterDerefBdd(manager, res2);
-	if (F->ref != 1)
-	    cuddCacheInsert2(manager, Cudd_bddExistAbstract, f, cube, res);
-	cuddDeref(res);
+        res = cuddBddAndRecur(manager, Cudd_NotCond(res1,res1 != unknown), Cudd_NotCond(res2,res2 != unknown));
+        if (res == NULL) {
+            Cudd_IterDerefBdd(manager, res1);
+            Cudd_IterDerefBdd(manager, res2);
+            return(NULL);
+        }
+        res = Cudd_NotCond(res,res != unknown);
+        cuddRef(res);
+        Cudd_IterDerefBdd(manager, res1);
+        Cudd_IterDerefBdd(manager, res2);
+        if (F->ref != 1)
+            cuddCacheInsert2(manager, Cudd_bddExistAbstract, f, cube, res);
+        cuddDeref(res);
         return(res);
     } else { /* if (cuddI(manager,F->index) < cuddI(manager,cube->index)) */
-	res1 = cuddBddExistAbstractRecur(manager, T, cube);
-	if (res1 == NULL) return(NULL);
+        res1 = cuddBddExistAbstractRecur(manager, T, cube);
+        if (res1 == NULL) return(NULL);
         cuddRef(res1);
-	res2 = cuddBddExistAbstractRecur(manager, E, cube);
-	if (res2 == NULL) {
-	    Cudd_IterDerefBdd(manager, res1);
-	    return(NULL);
-	}
+        res2 = cuddBddExistAbstractRecur(manager, E, cube);
+        if (res2 == NULL) {
+            Cudd_IterDerefBdd(manager, res1);
+            return(NULL);
+        }
         cuddRef(res2);
-	/* ITE takes care of possible complementation of res1 and of the
-        ** case in which res1 == res2. */
-	res = cuddBddIteRecur(manager, manager->vars[F->index], res1, res2);
-	if (res == NULL) {
-	    Cudd_IterDerefBdd(manager, res1);
-	    Cudd_IterDerefBdd(manager, res2);
-	    return(NULL);
-	}
-	cuddDeref(res1);
-	cuddDeref(res2);
-	if (F->ref != 1)
-	    cuddCacheInsert2(manager, Cudd_bddExistAbstract, f, cube, res);
+        /* ITE takes care of possible complementation of res1 and of the
+            ** case in which res1 == res2. */
+        res = cuddBddIteRecur(manager, manager->vars[F->index], res1, res2);
+        if (res == NULL) {
+            Cudd_IterDerefBdd(manager, res1);
+            Cudd_IterDerefBdd(manager, res2);
+            return(NULL);
+        }
+        cuddDeref(res1);
+        cuddDeref(res2);
+        if (F->ref != 1)
+            cuddCacheInsert2(manager, Cudd_bddExistAbstract, f, cube, res);
         return(res);
-    }	    
+    }
 
 } /* end of cuddBddExistAbstractRecur */
 

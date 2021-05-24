@@ -1,3 +1,16 @@
+Release 3.0.0 3-val of Cudd add support for 3-valued BDDs, i.e. BDDs
+working with 'unknown' constant nodes. This involves changes to the
+way how complement edges are treated and to some terminal cases of BDD
+operations.
+
+DdManager has been extended with the 'unknown' constant and the macro
+DD_UNKNOWN, the function Cudd_ReadUnknown have been added.
+
+The CUDD package contains a new file cuddBddUnknown.c for functions
+especially dedicated to unknown BDD manipulation.
+
+----------------------------------------------------------------------
+
 Release 3.0.0 of Cudd uses autotools for its build.  It can also
 produce a shared library.  The shared library contains the core CUDD
 functions, and, optionally, the dddmp functions and the C++ wrapper.

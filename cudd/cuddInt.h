@@ -52,6 +52,7 @@
 /*---------------------------------------------------------------------------*/
 
 #include <math.h>
+#include <limits.h>
 #include "config.h"
 #include "st.h"
 #include "mtr.h"
@@ -400,6 +401,7 @@ struct DdManager {
     /* Constants */
     DdNode sentinel;		/**< for collision lists */
     DdNode *one;		/**< constant 1 */
+    DdNode *unknown;		/**< constant 0.5 */
     DdNode *zero;		/**< constant 0 */
     DdNode *plusinfinity;	/**< plus infinity */
     DdNode *minusinfinity;	/**< minus infinity */
@@ -938,6 +940,17 @@ struct DdLevelQueue {
 
 */
 #define DD_ONE(dd)		((dd)->one)
+
+
+/**
+  @brief Returns the constant 0.5 (unknown) node.
+
+  @sideeffect none
+
+  @see DD_ZERO DD_PLUS_INFINITY DD_MINUS_INFINITY
+
+*/
+#define DD_UNKNOWN(dd)		((dd)->unknown)
 
 
 /**

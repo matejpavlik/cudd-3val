@@ -1018,7 +1018,6 @@ cuddBddAndRecur(
     G = Cudd_Regular(g);
     if (F == G) {
         if (f == g) return (f);
-        else if (F == unknown) return (unknown);
     }
     if (F == one) {
         if (f == one) return (g);

@@ -409,7 +409,7 @@ cuddBddExistAbstractRecur(
 
     /* If the two indices are the same, so are their levels. */
     if (F->index == cube->index) {
-        if (T == one || E == one || T == Cudd_Not(E)) {
+        if (T == one || E == one) {
             return(one);
         }
         res1 = cuddBddExistAbstractRecur(manager, T, cuddT(cube));
@@ -458,10 +458,12 @@ cuddBddExistAbstractRecur(
             Cudd_IterDerefBdd(manager, res2);
             return(NULL);
         }
-        cuddDeref(res1);
-        cuddDeref(res2);
+        cuddRef(res);
+        Cudd_IterDerefBdd(manager, res1);
+        Cudd_IterDerefBdd(manager, res2);
         if (F->ref != 1)
             cuddCacheInsert2(manager, Cudd_bddExistAbstract, f, cube, res);
+        cuddDeref(res);
         return(res);
     }
 

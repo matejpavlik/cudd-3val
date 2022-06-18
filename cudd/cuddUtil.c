@@ -1664,12 +1664,13 @@ Cudd_bddPickOneMintermGeneral(
 
 #ifdef DD_DEBUG
     /* Test. */
-    if (Cudd_bddLeq(dd,old,f)) {
+    // TODO : LEQ CAN'T BE APPLIED TO IMPRECISE BDDs
+//    if (Cudd_bddLeq(dd,old,f)) {
     cuddDeref(old);
-    } else {
-    Cudd_RecursiveDeref(dd,old);
-    old = NULL;
-    }
+//    } else {
+ //   Cudd_RecursiveDeref(dd,old);
+ //   old = NULL;
+ //   }
 #else
     cuddDeref(old);
 #endif

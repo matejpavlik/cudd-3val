@@ -420,8 +420,20 @@ ABDD::summary(
 // ---------------------------------------------------------------------------
 
 BDD::BDD() : ABDD() {}
-BDD::BDD(Capsule *cap, DdNode *bddNode) : ABDD(cap,bddNode) {}
-BDD::BDD(Cudd const & manager, DdNode *bddNode) : ABDD(manager,bddNode) {}
+BDD::BDD(Capsule *cap, DdNode *bddNode) : ABDD(cap,bddNode) {
+#ifdef DD_DEBUG
+   if (bddNode != DD_UNKNOWN(cap->manager) && Cudd_Regular(bddNode) != DD_ONE(cap->manager)) {
+       DdNode* then = cuddT(Cudd_Regular(bddNode));
+       assert(then == Cudd_Regular(then));
+   }
+#endif
+}
+BDD::BDD(Cudd const & manager, DdNode *bddNode) : ABDD(manager,bddNode) {
+#ifdef DD_DEBUG
+   if (bddNode != DD_UNKNOWN(manager.getManager()) && Cudd_Regular(bddNode) != DD_ONE(manager.getManager()))
+   	assert(cuddT(Cudd_Regular(bddNode)) == Cudd_Regular(cuddT(Cudd_Regular(bddNode))));
+#endif
+}
 BDD::BDD(const BDD &from) : ABDD(from) {}
 
 
@@ -492,7 +504,7 @@ BDD::operator>(
 BDD
 BDD::operator!() const
 {
-    return BDD(p, Cudd_Not(node));
+    return BDD(p, Cudd_NotCond(node, node != DD_UNKNOWN(p->manager)));
 
 } // BDD::operator!
 
@@ -500,7 +512,7 @@ BDD::operator!() const
 BDD
 BDD::operator~() const
 {
-    return BDD(p, Cudd_Not(node));
+    return BDD(p, Cudd_NotCond(node, node != DD_UNKNOWN(p->manager)));
 
 } // BDD::operator~
 
@@ -645,7 +657,7 @@ BDD::operator-(
   const BDD& other) const
 {
     DdManager *mgr = checkSameManager(other);
-    DdNode *result = Cudd_bddAnd(mgr,node,Cudd_Not(other.node));
+    DdNode *result = Cudd_bddAnd(mgr,node,Cudd_NotCond(other.node, other.node != DD_UNKNOWN(mgr)));
     checkReturnValue(result);
     return BDD(p, result);
 
@@ -657,7 +669,7 @@ BDD::operator-=(
   const BDD& other)
 {
     DdManager *mgr = checkSameManager(other);
-    DdNode *result = Cudd_bddAnd(mgr,node,Cudd_Not(other.node));
+    DdNode *result = Cudd_bddAnd(mgr,node,Cudd_NotCond(other.node, other.node != DD_UNKNOWN(mgr)));
     checkReturnValue(result);
     Cudd_Ref(result);
     Cudd_RecursiveDeref(mgr,node);
@@ -692,11 +704,27 @@ BDD::IsZero() const
 
 
 bool
+BDD::IsUnknown() const
+{
+    return node == Cudd_ReadUnknown(p->manager);
+
+} // BDD::IsUnknown
+
+
+bool
 BDD::IsVar() const
 {
     return Cudd_bddIsVar(p->manager, node);
 
 } // BDD::IsVar
+
+
+bool
+BDD::IsPrecise() const
+{
+    return (*this | !*this).IsOne();
+
+} // BDD::IsPrecise
 
 
 // ---------------------------------------------------------------------------
@@ -1462,6 +1490,16 @@ BDD
 Cudd::bddZero() const
 {
     DdNode *result = Cudd_ReadLogicZero(p->manager);
+    checkReturnValue(result);
+    return BDD(p, result);
+
+} // Cudd::bddZero
+
+
+BDD
+Cudd::bddUnknown() const
+{
+    DdNode *result = Cudd_ReadUnknown(p->manager);
     checkReturnValue(result);
     return BDD(p, result);
 
@@ -3384,6 +3422,23 @@ BDD::UnivAbstract(
 
 
 BDD
+BDD::ForgetOnes() const
+{
+    DdNode *result = Cudd_BddForgetOnes(p->manager, node);
+    checkReturnValue(result);
+    return BDD(p, result);
+} // BDD::ForgetOnes
+
+BDD
+BDD::ForgetZeros() const
+{
+    DdNode *result = Cudd_BddForgetZeros(p->manager, node);
+    checkReturnValue(result);
+    return BDD(p, result);
+} // BDD::ForgetZeros
+
+
+BDD
 BDD::BooleanDiff(
   int x) const
 {
@@ -3439,6 +3494,7 @@ BDD::Ite(
 	result = Cudd_bddIte(mgr, node, g.node, h.node);
     else
 	result = Cudd_bddIteLimit(mgr, node, g.node, h.node, limit);
+
     checkReturnValue(result);
     return BDD(p, result);
 
@@ -3556,6 +3612,92 @@ BDD::Xnor(
     return BDD(p, result);
 
 } // BDD::Xnor
+
+
+BDD
+BDD::IteP(
+  const BDD& g,
+  const BDD& h) const
+{
+    DdManager *mgr = checkSameManager(g);
+    checkSameManager(h);
+    DdNode *result = Cudd_preciseBddIte(mgr, node, g.node, h.node);
+    checkReturnValue(result);
+    return BDD(p, result);
+
+} // BDD::IteP
+
+
+BDD
+BDD::AndP(
+  const BDD& g) const
+{
+    DdManager *mgr = checkSameManager(g);
+    DdNode *result = Cudd_preciseBddAnd(mgr, node, g.node);
+    checkReturnValue(result);
+    return BDD(p, result);
+
+} // BDD::AndP
+
+
+BDD
+BDD::OrP(
+  const BDD& g) const
+{
+    DdManager *mgr = checkSameManager(g);
+    DdNode *result = Cudd_preciseBddOr(mgr, node, g.node);
+    checkReturnValue(result);
+    return BDD(p, result);
+
+} // BDD::OrP
+
+
+BDD
+BDD::NandP(
+  const BDD& g) const
+{
+    DdManager *mgr = checkSameManager(g);
+    DdNode *result = Cudd_preciseBddNand(mgr, node, g.node);
+    checkReturnValue(result);
+    return BDD(p, result);
+
+} // BDD::NandP
+
+
+BDD
+BDD::NorP(
+  const BDD& g) const
+{
+    DdManager *mgr = checkSameManager(g);
+    DdNode *result = Cudd_preciseBddNor(mgr, node, g.node);
+    checkReturnValue(result);
+    return BDD(p, result);
+
+} // BDD::NorP
+
+
+BDD
+BDD::XorP(
+  const BDD& g) const
+{
+    DdManager *mgr = checkSameManager(g);
+    DdNode *result = Cudd_preciseBddXor(mgr, node, g.node);
+    checkReturnValue(result);
+    return BDD(p, result);
+
+} // BDD::XorP
+
+
+BDD
+BDD::XnorP(
+  const BDD& g) const
+{
+    DdManager *mgr = checkSameManager(g);
+    DdNode *result = Cudd_preciseBddXnor(mgr, node, g.node);
+    checkReturnValue(result);
+    return BDD(p, result);
+
+} // BDD::XnorP
 
 
 bool
@@ -5648,6 +5790,42 @@ BDD::PickOneMinterm(
 	V[i] = vars[i].node;
     }
     DdNode *result = Cudd_bddPickOneMinterm(mgr, node, V, (int) n);
+    delete [] V;
+    checkReturnValue(result);
+    return BDD(p, result);
+
+} // BDD::PickOneMinterm
+
+
+BDD
+BDD::PickOneMintermUnder(
+        std::vector<BDD> vars) const
+{
+    size_t n = vars.size();
+    DdManager *mgr = p->manager;
+    DdNode **V = new DdNode *[n];
+    for (size_t i = 0; i < n; i++) {
+        V[i] = vars[i].node;
+    }
+    DdNode *result = Cudd_bddPickOneMintermGeneral(mgr, node, V, (int) n, Cudd_bddPickOneCubeUnder);
+    delete [] V;
+    checkReturnValue(result);
+    return BDD(p, result);
+
+} // BDD::PickOneMinterm
+
+
+BDD
+BDD::PickOneMintermOver(
+        std::vector<BDD> vars) const
+{
+    size_t n = vars.size();
+    DdManager *mgr = p->manager;
+    DdNode **V = new DdNode *[n];
+    for (size_t i = 0; i < n; i++) {
+        V[i] = vars[i].node;
+    }
+    DdNode *result = Cudd_bddPickOneMintermGeneral(mgr, node, V, (int) n, Cudd_bddPickOneCubeOver);
     delete [] V;
     checkReturnValue(result);
     return BDD(p, result);

@@ -138,7 +138,7 @@
 ** of 5 bits for the tag proper, which means a maximum of 32 three-operand
 ** operations. */
 #define DD_ADD_ITE_TAG				0x02
-#define DD_BDD_AND_ABSTRACT_TAG			0x06
+#define DD_BDD_AND_ABSTRACT_TAG		0x06
 #define DD_BDD_XOR_EXIST_ABSTRACT_TAG		0x0a
 #define DD_BDD_ITE_TAG				0x0e
 #define DD_ADD_BDD_DO_INTERVAL_TAG		0x22
@@ -147,17 +147,18 @@
 #define DD_BDD_COMPOSE_RECUR_TAG		0x2e
 #define DD_ADD_COMPOSE_RECUR_TAG		0x42
 #define DD_ADD_NON_SIM_COMPOSE_TAG		0x46
-#define DD_EQUIV_DC_TAG				0x4a
+#define DD_EQUIV_DC_TAG			0x4a
 #define DD_ZDD_ITE_TAG				0x4e
-#define DD_ADD_ITE_CONSTANT_TAG			0x62
+#define DD_ADD_ITE_CONSTANT_TAG		0x62
 #define DD_ADD_EVAL_CONST_TAG			0x66
-#define DD_BDD_ITE_CONSTANT_TAG			0x6a
+#define DD_BDD_ITE_CONSTANT_TAG		0x6a
 #define DD_ADD_OUT_SUM_TAG			0x6e
 #define DD_BDD_LEQ_UNLESS_TAG			0x82
 #define DD_ADD_TRIANGLE_TAG			0x86
 #define DD_BDD_MAX_EXP_TAG			0x8a
-#define DD_VARS_SYMM_BEFORE_TAG			0x8e
+#define DD_VARS_SYMM_BEFORE_TAG		0x8e
 #define DD_VARS_SYMM_BETWEEN_TAG		0xa2
+#define DD_PRECISE_BDD_ITE_TAG		0xa6
 
 /* Generator constants. */
 #define CUDD_GEN_CUBES 0
@@ -1093,6 +1094,9 @@ extern DdNode * cuddBddIteRecur(DdManager *dd, DdNode *f, DdNode *g, DdNode *h);
 extern DdNode * cuddBddIntersectRecur(DdManager *dd, DdNode *f, DdNode *g);
 extern DdNode * cuddBddAndRecur(DdManager *manager, DdNode *f, DdNode *g);
 extern DdNode * cuddBddXorRecur(DdManager *manager, DdNode *f, DdNode *g);
+extern DdNode * cuddPreciseBddIteRecur(DdManager *dd, DdNode *f, DdNode *g, DdNode *h);
+extern DdNode * cuddPreciseBddAndRecur(DdManager *manager, DdNode *f, DdNode *g);
+extern DdNode * cuddPreciseBddXorRecur(DdManager *manager, DdNode *f, DdNode *g);
 extern DdNode * cuddBddTransfer(DdManager *ddS, DdManager *ddD, DdNode *f);
 extern DdNode * cuddAddBddDoPattern(DdManager *dd, DdNode *f);
 extern int cuddInitCache(DdManager *unique, unsigned int cacheSize, unsigned int maxCacheSize);

@@ -53,6 +53,7 @@
 #ifndef CUDD_H_
 #define CUDD_H_
 
+
 /*---------------------------------------------------------------------------*/
 /* Nested includes                                                           */
 /*---------------------------------------------------------------------------*/
@@ -746,6 +747,13 @@ extern DdNode * Cudd_bddNor(DdManager *dd, DdNode *f, DdNode *g);
 extern DdNode * Cudd_bddXor(DdManager *dd, DdNode *f, DdNode *g);
 extern DdNode * Cudd_bddXnor(DdManager *dd, DdNode *f, DdNode *g);
 extern DdNode * Cudd_bddXnorLimit(DdManager *dd, DdNode *f, DdNode *g, unsigned int limit);
+extern DdNode * Cudd_preciseBddIte(DdManager *dd, DdNode *f, DdNode *g, DdNode *h);
+extern DdNode * Cudd_preciseBddAnd(DdManager *dd, DdNode *f, DdNode *g);
+extern DdNode * Cudd_preciseBddOr(DdManager *dd, DdNode *f, DdNode *g);
+extern DdNode * Cudd_preciseBddNand(DdManager *dd, DdNode *f, DdNode *g);
+extern DdNode * Cudd_preciseBddNor(DdManager *dd, DdNode *f, DdNode *g);
+extern DdNode * Cudd_preciseBddXor(DdManager *dd, DdNode *f, DdNode *g);
+extern DdNode * Cudd_preciseBddXnor(DdManager *dd, DdNode *f, DdNode *g);
 extern int Cudd_bddLeq(DdManager *dd, DdNode *f, DdNode *g);
 extern DdNode * Cudd_addBddThreshold(DdManager *dd, DdNode *f, CUDD_VALUE_TYPE value);
 extern DdNode * Cudd_addBddStrictThreshold(DdManager *dd, DdNode *f, CUDD_VALUE_TYPE value);

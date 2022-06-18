@@ -43,6 +43,7 @@
 
 */
 
+
 #include "util.h"
 #include "cuddInt.h"
 
@@ -107,7 +108,6 @@ Cudd_bddIte(
   DdNode * g /**< second operand */,
   DdNode * h /**< third operand */)
 {
-
     DdNode *res;
 
     do {
@@ -158,6 +158,39 @@ Cudd_bddIteLimit(
     return(res);
 
 } /* end of Cudd_bddIteLimit */
+
+
+/**
+  @brief Implements ITE(f,g,h).
+
+  @return a pointer to the resulting %BDD if successful; NULL if the
+  intermediate result blows up.
+
+  @sideeffect None
+
+  @see Cudd_addIte Cudd_bddIteConstant Cudd_bddIntersect
+
+*/
+DdNode *
+Cudd_preciseBddIte(
+  DdManager * dd /**< manager */,
+  DdNode * f /**< first operand */,
+  DdNode * g /**< second operand */,
+  DdNode * h /**< third operand */)
+{
+    DdNode *res;
+
+    do {
+	dd->reordered = 0;
+	res = cuddPreciseBddIteRecur(dd,f,g,h);
+    } while (dd->reordered == 1);
+    if (dd->errorCode == CUDD_TIMEOUT_EXPIRED && dd->timeoutHandler) {
+        dd->timeoutHandler(dd, dd->tohArg);
+    }
+    
+    return(res);
+
+} /* end of Cudd_preciseBddIte */
 
 
 /**
@@ -370,6 +403,38 @@ Cudd_bddAndLimit(
 
 
 /**
+  @brief Computes the conjunction of two BDDs f and g.
+
+  @return a pointer to the resulting %BDD if successful; NULL if the
+  intermediate result blows up.
+
+  @sideeffect None
+
+  @see Cudd_bddIte Cudd_addApply Cudd_bddAndAbstract Cudd_bddIntersect
+  Cudd_bddOr Cudd_bddNand Cudd_bddNor Cudd_bddXor Cudd_bddXnor
+
+*/
+DdNode *
+Cudd_preciseBddAnd(
+  DdManager * dd /**< manager */,
+  DdNode * f /**< first operand */,
+  DdNode * g /**< second operand */)
+{
+    DdNode *res;
+
+    do {
+	dd->reordered = 0;
+	res = cuddPreciseBddAndRecur(dd,f,g);
+    } while (dd->reordered == 1);
+    if (dd->errorCode == CUDD_TIMEOUT_EXPIRED && dd->timeoutHandler) {
+        dd->timeoutHandler(dd, dd->tohArg);
+    }
+    return(res);
+
+} /* end of Cudd_preciseBddAnd */
+
+
+/**
   @brief Computes the disjunction of two BDDs f and g.
 
   @return a pointer to the resulting %BDD if successful; NULL if the
@@ -443,6 +508,39 @@ Cudd_bddOrLimit(
 
 
 /**
+  @brief Computes the disjunction of two BDDs f and g.
+
+  @return a pointer to the resulting %BDD if successful; NULL if the
+  intermediate result blows up.
+
+  @sideeffect None
+
+  @see Cudd_bddIte Cudd_addApply Cudd_bddAnd Cudd_bddNand Cudd_bddNor
+  Cudd_bddXor Cudd_bddXnor
+
+*/
+DdNode *
+Cudd_preciseBddOr(
+  DdManager * dd /**< manager */,
+  DdNode * f /**< first operand */,
+  DdNode * g /**< second operand */)
+{
+    DdNode *res;
+
+    do {
+	dd->reordered = 0;
+	res = cuddPreciseBddAndRecur(dd,Cudd_Not(f),Cudd_Not(g));
+    } while (dd->reordered == 1);
+    if (dd->errorCode == CUDD_TIMEOUT_EXPIRED && dd->timeoutHandler) {
+        dd->timeoutHandler(dd, dd->tohArg);
+    }
+    res = Cudd_NotCond(res,res != NULL);
+    return(res);
+
+} /* end of Cudd_preciseBddOr */
+
+
+/**
   @brief Computes the NAND of two BDDs f and g.
 
   @return a pointer to the resulting %BDD if successful; NULL if the
@@ -474,6 +572,39 @@ Cudd_bddNand(
     return(res);
 
 } /* end of Cudd_bddNand */
+
+
+/**
+  @brief Computes the NAND of two BDDs f and g.
+
+  @return a pointer to the resulting %BDD if successful; NULL if the
+  intermediate result blows up.
+
+  @sideeffect None
+
+  @see Cudd_bddIte Cudd_addApply Cudd_bddAnd Cudd_bddOr Cudd_bddNor
+  Cudd_bddXor Cudd_bddXnor
+
+*/
+DdNode *
+Cudd_preciseBddNand(
+  DdManager * dd /**< manager */,
+  DdNode * f /**< first operand */,
+  DdNode * g /** second operand */)
+{
+    DdNode *res;
+
+    do {
+	dd->reordered = 0;
+	res = cuddPreciseBddAndRecur(dd,f,g);
+    } while (dd->reordered == 1);
+    if (dd->errorCode == CUDD_TIMEOUT_EXPIRED && dd->timeoutHandler) {
+        dd->timeoutHandler(dd, dd->tohArg);
+    }
+    res = Cudd_NotCond(res,res != NULL);
+    return(res);
+
+} /* end of Cudd_preciseBddNand */
 
 
 /**
@@ -510,6 +641,38 @@ Cudd_bddNor(
 
 
 /**
+  @brief Computes the NOR of two BDDs f and g.
+
+  @return a pointer to the resulting %BDD if successful; NULL if the
+  intermediate result blows up.
+
+  @sideeffect None
+
+  @see Cudd_bddIte Cudd_addApply Cudd_bddAnd Cudd_bddOr Cudd_bddNand
+  Cudd_bddXor Cudd_bddXnor
+
+*/
+DdNode *
+Cudd_preciseBddNor(
+  DdManager * dd /**< manager */,
+  DdNode * f /**< first operand */,
+  DdNode * g /**< second operand */)
+{
+    DdNode *res;
+
+    do {
+	dd->reordered = 0;
+	res = cuddPreciseBddAndRecur(dd,Cudd_Not(f),Cudd_Not(g));
+    } while (dd->reordered == 1);
+    if (dd->errorCode == CUDD_TIMEOUT_EXPIRED && dd->timeoutHandler) {
+        dd->timeoutHandler(dd, dd->tohArg);
+    }
+    return(res);
+
+} /* end of Cudd_preciseBddNor */
+
+
+/**
   @brief Computes the exclusive OR of two BDDs f and g.
 
   @return a pointer to the resulting %BDD if successful; NULL if the
@@ -540,6 +703,39 @@ Cudd_bddXor(
     return(res);
 
 } /* end of Cudd_bddXor */
+
+
+/**
+  @brief Computes the exclusive OR of two BDDs f and g.
+
+  @return a pointer to the resulting %BDD if successful; NULL if the
+  intermediate result blows up.
+
+  @sideeffect None
+
+  @see Cudd_bddIte Cudd_addApply Cudd_bddAnd Cudd_bddOr
+  Cudd_bddNand Cudd_bddNor Cudd_bddXnor
+
+*/
+DdNode *
+Cudd_preciseBddXor(
+  DdManager * dd /**< manager */,
+  DdNode * f /**< first operand */,
+  DdNode * g /**< second operand */)
+{
+    DdNode *res;
+    
+    do {
+	dd->reordered = 0;
+	res = cuddPreciseBddXorRecur(dd,f,g);
+    } while (dd->reordered == 1);
+    if (dd->errorCode == CUDD_TIMEOUT_EXPIRED && dd->timeoutHandler) {
+        dd->timeoutHandler(dd, dd->tohArg);
+    }
+    
+    return(res);
+
+} /* end of Cudd_preciseBddXor */
 
 
 /**
@@ -613,6 +809,39 @@ Cudd_bddXnorLimit(
     return(res);
 
 } /* end of Cudd_bddXnorLimit */
+
+
+/**
+  @brief Computes the exclusive NOR of two BDDs f and g.
+
+  @return a pointer to the resulting %BDD if successful; NULL if the
+  intermediate result blows up.
+
+  @sideeffect None
+
+  @see Cudd_bddIte Cudd_addApply Cudd_bddAnd Cudd_bddOr
+  Cudd_bddNand Cudd_bddNor Cudd_bddXor
+
+*/
+DdNode *
+Cudd_preciseBddXnor(
+  DdManager * dd /**< manager */,
+  DdNode * f /**< first operand */,
+  DdNode * g /**< second operand */)
+{
+    DdNode *res;
+
+    do {
+	dd->reordered = 0;
+	res = cuddPreciseBddXorRecur(dd,f,Cudd_Not(g));
+    } while (dd->reordered == 1);
+    if (dd->errorCode == CUDD_TIMEOUT_EXPIRED && dd->timeoutHandler) {
+        dd->timeoutHandler(dd, dd->tohArg);
+    }
+    
+    return(res);
+
+} /* end of Cudd_preciseBddXnor */
 
 
 /**
@@ -738,6 +967,12 @@ cuddBddIteRecur(
     one = DD_ONE(dd);
     zero = Cudd_Not(one);
     unknown = DD_UNKNOWN(dd);
+    
+    #ifdef DD_DEBUG
+    assert(f != Cudd_Not(unknown));
+    assert(g != Cudd_Not(unknown));
+    assert(h != Cudd_Not(unknown));
+    #endif
 
     statLine(dd);
     /* Terminal cases. */
@@ -753,9 +988,22 @@ cuddBddIteRecur(
         || (f == unknown && g == Cudd_NotCond(h,h != unknown)))
         return(unknown);
 
-    // very rough
-    if (f == unknown)
+    if (f == unknown) {
         return(unknown);
+    
+        // possible alternatives
+        /*DdNode* tmp = cuddBddAndRecur(dd,g,h);
+        cuddRef(tmp);
+        res = cuddBddAndRecur(dd,Cudd_NotCond(tmp,tmp != unknown),unknown);
+        Cudd_IterDerefBdd(dd,tmp);
+        return Cudd_NotCond(res,res != NULL && res != unknown);*/
+        
+        /*DdNode* tmp = cuddBddAndRecur(dd,Cudd_NotCond(g,g!=unknown),Cudd_NotCond(h,h!=unknown));
+        cuddRef(tmp);
+        res = cuddBddAndRecur(dd,Cudd_NotCond(tmp,tmp != unknown),unknown);
+        Cudd_IterDerefBdd(dd,tmp);
+        return(res);*/
+    }
 
     /* From now on, f is known not to be a constant. */
     if (g == one || f == g) {	/* ITE(F,F,H) = ITE(F,1,H) = F + H */
@@ -789,9 +1037,15 @@ cuddBddIteRecur(
         return unknown;
     }
 
+    #ifdef DD_DEBUG
+    assert(cuddE(Cudd_Regular(h)) != Cudd_Not(unknown));
+    #endif
     /* From here, there are no constants. */
     comple = bddVarToCanonicalSimple(dd, &f, &g, &h, &topf, &topg, &toph);
 
+    #ifdef DD_DEBUG
+    assert(cuddE(Cudd_Regular(h)) != Cudd_Not(unknown));
+    #endif
     /* f & g are now regular pointers */
 
     v = ddMin(topg, toph);
@@ -826,6 +1080,9 @@ cuddBddIteRecur(
     }
     if (toph == v) {
         H = Cudd_Regular(h);
+        #ifdef DD_DEBUG
+        assert(cuddE(H) != Cudd_Not(unknown));
+        #endif
         index = H->index;
         Hv = cuddT(H); Hnv = cuddE(H);
         if (Cudd_IsComplement(h)) {
@@ -870,8 +1127,147 @@ cuddBddIteRecur(
     cuddDeref(e);
 
     cuddCacheInsert(dd, DD_BDD_ITE_TAG, f, g, h, r);
+    #ifdef DD_DEBUG
+    assert(r != Cudd_Not(unknown));
+    #endif
     return(Cudd_NotCond(r,comple && r != unknown));
 } /* end of cuddBddIteRecur */
+
+
+
+/**
+  @brief Implements the recursive step of Cudd_preciseBddIte.
+  @return a pointer to the resulting %BDD. NULL if the intermediate
+  result blows up or if reordering occurs.
+  @sideeffect None
+*/
+DdNode *
+cuddPreciseBddIteRecur(
+  DdManager * dd,
+  DdNode * f,
+  DdNode * g,
+  DdNode * h)
+{
+    DdNode	 *one, *zero, *res;
+    DdNode	 *r, *Fv, *Fnv, *Gv, *Gnv, *H, *Hv, *Hnv, *t, *e;
+    int		 topf, topg, toph, v;
+    unsigned int index;
+    int		 comple;
+
+    statLine(dd);
+    /* Terminal cases. */
+
+    /* One variable cases. */
+    if (f == (one = DD_ONE(dd))) 	/* ITE(1,G,H) = G */
+	return(g);
+    
+    if (f == (zero = Cudd_Not(one))) 	/* ITE(0,G,H) = H */
+	return(h);
+    
+    /* From now on, f is known not to be a constant. */
+    if (g == one || f == g) {	/* ITE(F,F,H) = ITE(F,1,H) = F + H */
+	if (h == zero) {	/* ITE(F,1,0) = F */
+	    return(f);
+	} else {
+	    res = cuddPreciseBddAndRecur(dd,Cudd_Not(f),Cudd_Not(h));
+	    return(Cudd_NotCond(res,res != NULL));
+	}
+    } else if (g == zero || f == Cudd_Not(g)) { /* ITE(F,!F,H) = ITE(F,0,H) = !F * H */
+	if (h == one) {		/* ITE(F,0,1) = !F */
+	    return(Cudd_Not(f));
+	} else {
+	    res = cuddPreciseBddAndRecur(dd,Cudd_Not(f),h);
+	    return(res);
+	}
+    }
+    if (h == zero || f == h) {    /* ITE(F,G,F) = ITE(F,G,0) = F * G */
+	res = cuddPreciseBddAndRecur(dd,f,g);
+	return(res);
+    } else if (h == one || f == Cudd_Not(h)) { /* ITE(F,G,!F) = ITE(F,G,1) = !F + G */
+	res = cuddPreciseBddAndRecur(dd,f,Cudd_Not(g));
+	return(Cudd_NotCond(res,res != NULL));
+    }
+
+    /* Check remaining one variable case. */
+    if (g == h) { 		/* ITE(F,G,G) = G */
+	return(g);
+    } else if (g == Cudd_Not(h)) { /* ITE(F,G,!G) = F <-> G */
+	res = cuddPreciseBddXorRecur(dd,f,h);
+	return(res);
+    }
+    
+    /* From here, there are no constants. */
+    comple = bddVarToCanonicalSimple(dd, &f, &g, &h, &topf, &topg, &toph);
+
+    /* f & g are now regular pointers */
+
+    v = ddMin(topg, toph);
+
+    /* A shortcut: ITE(F,G,H) = (v,G,H) if F = (v,1,0), v < top(G,H). */
+    if (topf < v && cuddT(f) == one && cuddE(f) == zero) {
+	r = cuddUniqueInter(dd, (int) f->index, g, h);
+	return(Cudd_NotCond(r,comple && r != NULL));
+    }
+
+    /* Check cache. */
+    r = cuddCacheLookup(dd, DD_PRECISE_BDD_ITE_TAG, f, g, h);
+    if (r != NULL) {
+	return(Cudd_NotCond(r,comple));
+    }
+
+    checkWhetherToGiveUp(dd);
+
+    /* Compute cofactors. */
+    index = f->index;
+    if (topf <= v) {
+	v = ddMin(topf, v);	/* v = top_var(F,G,H) */
+	Fv = cuddT(f); Fnv = cuddE(f);
+    } else {
+	Fv = Fnv = f;
+    }
+    if (topg == v) {
+	index = g->index;
+	Gv = cuddT(g); Gnv = cuddE(g);
+    } else {
+	Gv = Gnv = g;
+    }
+    if (toph == v) {
+	H = Cudd_Regular(h);
+	index = H->index;
+	Hv = cuddT(H); Hnv = cuddE(H);
+	if (Cudd_IsComplement(h)) {
+	    Hv = Cudd_Not(Hv);
+	    Hnv = Cudd_Not(Hnv);
+	}
+    } else {
+	Hv = Hnv = h;
+    }
+
+    /* Recursive step. */
+    t = cuddPreciseBddIteRecur(dd,Fv,Gv,Hv);
+    if (t == NULL) return(NULL);
+    cuddRef(t);
+
+    e = cuddPreciseBddIteRecur(dd,Fnv,Gnv,Hnv);
+    if (e == NULL) {
+	Cudd_IterDerefBdd(dd,t);
+	return(NULL);
+    }
+    cuddRef(e);
+
+    r = (t == e) ? t : cuddUniqueInter(dd,index,t,e);
+    if (r == NULL) {
+	Cudd_IterDerefBdd(dd,t);
+	Cudd_IterDerefBdd(dd,e);
+	return(NULL);
+    }
+    cuddDeref(t);
+    cuddDeref(e);
+
+    cuddCacheInsert(dd, DD_PRECISE_BDD_ITE_TAG, f, g, h, r);
+    return(Cudd_NotCond(r,comple));
+
+} /* end of cuddPreciseBddIteRecur */
 
 
 /**
@@ -1008,16 +1404,22 @@ cuddBddAndRecur(
     DdNode *one, *unknown, *r, *t, *e;
     int topf, topg;
     unsigned int index;
-
+    
     statLine(manager);
     one = DD_ONE(manager);
     unknown = DD_UNKNOWN(manager);
+
+    #ifdef DD_DEBUG
+    assert(f != Cudd_Not(unknown));
+    assert(g != Cudd_Not(unknown));
+    #endif
 
     /* Terminal cases. */
     F = Cudd_Regular(f);
     G = Cudd_Regular(g);
     if (F == G) {
         if (f == g) return (f);
+        else if (F == unknown) return (unknown);
     }
     if (F == one) {
         if (f == one) return (g);
@@ -1123,6 +1525,11 @@ cuddBddAndRecur(
             }
         }
     }
+    #ifdef DD_DEBUG
+    assert(e != Cudd_Not(unknown));
+    assert(t != Cudd_Not(unknown));
+    assert(r != Cudd_Not(unknown));
+    #endif
     cuddDeref(e);
     cuddDeref(t);
     if (F->ref != 1 || G->ref != 1)
@@ -1130,6 +1537,131 @@ cuddBddAndRecur(
     return (r);
 
 } /* end of cuddBddAndRecur */
+
+
+/**
+  @brief Implements the recursive step of Cudd_bddAnd.
+  @details Takes the conjunction of two BDDs.
+  @return a pointer to the result is successful; NULL otherwise.
+  @sideeffect None
+  @see Cudd_preciseBddAnd
+*/
+DdNode *
+cuddPreciseBddAndRecur(
+  DdManager * manager,
+  DdNode * f,
+  DdNode * g)
+{
+    DdNode *F, *fv, *fnv, *G, *gv, *gnv;
+    DdNode *one, *r, *t, *e;
+    int topf, topg;
+    unsigned int index;
+
+    statLine(manager);
+    one = DD_ONE(manager);
+
+    /* Terminal cases. */
+    F = Cudd_Regular(f);
+    G = Cudd_Regular(g);
+    if (F == G) {
+	if (f == g) return(f);
+	else return(Cudd_Not(one));
+    }
+    if (F == one) {
+	if (f == one) return(g);
+	else return(f);
+    }
+    if (G == one) {
+	if (g == one) return(f);
+	else return(g);
+    }
+
+    /* At this point f and g are not constant. */
+    if (f > g) { /* Try to increase cache efficiency. */
+	DdNode *tmp = f;
+	f = g;
+	g = tmp;
+	F = Cudd_Regular(f);
+	G = Cudd_Regular(g);
+    }
+
+    /* Check cache. */
+    if (F->ref != 1 || G->ref != 1) {
+	r = cuddCacheLookup2(manager, Cudd_preciseBddAnd, f, g);
+	if (r != NULL) return(r);
+    }
+
+    checkWhetherToGiveUp(manager);
+
+    /* Here we can skip the use of cuddI, because the operands are known
+    ** to be non-constant.
+    */
+    topf = manager->perm[F->index];
+    topg = manager->perm[G->index];
+
+    /* Compute cofactors. */
+    if (topf <= topg) {
+	index = F->index;
+	fv = cuddT(F);
+	fnv = cuddE(F);
+	if (Cudd_IsComplement(f)) {
+	    fv = Cudd_Not(fv);
+	    fnv = Cudd_Not(fnv);
+	}
+    } else {
+	index = G->index;
+	fv = fnv = f;
+    }
+
+    if (topg <= topf) {
+	gv = cuddT(G);
+	gnv = cuddE(G);
+	if (Cudd_IsComplement(g)) {
+	    gv = Cudd_Not(gv);
+	    gnv = Cudd_Not(gnv);
+	}
+    } else {
+	gv = gnv = g;
+    }
+
+    t = cuddPreciseBddAndRecur(manager, fv, gv);
+    if (t == NULL) return(NULL);
+    cuddRef(t);
+
+    e = cuddPreciseBddAndRecur(manager, fnv, gnv);
+    if (e == NULL) {
+	Cudd_IterDerefBdd(manager, t);
+	return(NULL);
+    }
+    cuddRef(e);
+
+    if (t == e) {
+	r = t;
+    } else {
+	if (Cudd_IsComplement(t)) {
+	    r = cuddUniqueInter(manager,(int)index,Cudd_Not(t),Cudd_Not(e));
+	    if (r == NULL) {
+		Cudd_IterDerefBdd(manager, t);
+		Cudd_IterDerefBdd(manager, e);
+		return(NULL);
+	    }
+	    r = Cudd_Not(r);
+	} else {
+	    r = cuddUniqueInter(manager,(int)index,t,e);
+	    if (r == NULL) {
+		Cudd_IterDerefBdd(manager, t);
+		Cudd_IterDerefBdd(manager, e);
+		return(NULL);
+	    }
+	}
+    }
+    cuddDeref(e);
+    cuddDeref(t);
+    if (F->ref != 1 || G->ref != 1)
+	cuddCacheInsert2(manager, Cudd_preciseBddAnd, f, g, r);
+    return(r);
+
+} /* end of cuddPreciseBddAndRecur */
 
 
 /**
@@ -1153,11 +1685,16 @@ cuddBddXorRecur(
     DdNode *one, *zero, *unknown, *r, *t, *e;
     int topf, topg;
     unsigned int index;
-
+    
     statLine(manager);
     one = DD_ONE(manager);
     zero = Cudd_Not(one);
     unknown = DD_UNKNOWN(manager);
+
+    #ifdef DD_DEBUG
+    assert(f != Cudd_Not(unknown));
+    assert(g != Cudd_Not(unknown));
+    #endif
 
     /* Terminal cases. */
     F = Cudd_Regular(f);
@@ -1253,6 +1790,11 @@ cuddBddXorRecur(
             }
         }
     }
+    #ifdef DD_DEBUG
+    assert(e != Cudd_Not(unknown));
+    assert(t != Cudd_Not(unknown));
+    assert(r != Cudd_Not(unknown));
+    #endif
     cuddDeref(e);
     cuddDeref(t);
     cuddCacheInsert2(manager, Cudd_bddXor, f, g, r);
@@ -1260,6 +1802,119 @@ cuddBddXorRecur(
 
 } /* end of cuddBddXorRecur */
 
+
+/**
+  @brief Implements the recursive step of Cudd_preciseBddXor.
+  @details Takes the exclusive OR of two BDDs.
+  @return a pointer to the result is successful; NULL otherwise.
+  @sideeffect None
+  @see Cudd_preciseBddXor
+*/
+DdNode *
+cuddPreciseBddXorRecur(
+  DdManager * manager,
+  DdNode * f,
+  DdNode * g)
+{
+    DdNode *fv, *fnv, *G, *gv, *gnv;
+    DdNode *one, *zero, *r, *t, *e;
+    int topf, topg;
+    unsigned int index;
+
+    statLine(manager);
+    one = DD_ONE(manager);
+    zero = Cudd_Not(one);
+
+    /* Terminal cases. */
+    if (f == g) return(zero);
+    if (f == Cudd_Not(g)) return(one);
+    if (f > g) { /* Try to increase cache efficiency and simplify tests. */
+	DdNode *tmp = f;
+	f = g;
+	g = tmp;
+    }
+    if (g == zero) return(f);
+    if (g == one) return(Cudd_Not(f));
+    if (Cudd_IsComplement(f)) {
+	f = Cudd_Not(f);
+	g = Cudd_Not(g);
+    }
+    /* Now the first argument is regular. */
+    if (f == one) return(Cudd_Not(g));
+
+    /* At this point f and g are not constant. */
+
+    /* Check cache. */
+    r = cuddCacheLookup2(manager, Cudd_preciseBddXor, f, g);
+    if (r != NULL) return(r);
+
+    checkWhetherToGiveUp(manager);
+
+    /* Here we can skip the use of cuddI, because the operands are known
+    ** to be non-constant.
+    */
+    topf = manager->perm[f->index];
+    G = Cudd_Regular(g);
+    topg = manager->perm[G->index];
+
+    /* Compute cofactors. */
+    if (topf <= topg) {
+	index = f->index;
+	fv = cuddT(f);
+	fnv = cuddE(f);
+    } else {
+	index = G->index;
+	fv = fnv = f;
+    }
+
+    if (topg <= topf) {
+	gv = cuddT(G);
+	gnv = cuddE(G);
+	if (Cudd_IsComplement(g)) {
+	    gv = Cudd_Not(gv);
+	    gnv = Cudd_Not(gnv);
+	}
+    } else {
+	gv = gnv = g;
+    }
+
+    t = cuddPreciseBddXorRecur(manager, fv, gv);
+    if (t == NULL) return(NULL);
+    cuddRef(t);
+
+    e = cuddPreciseBddXorRecur(manager, fnv, gnv);
+    if (e == NULL) {
+	Cudd_IterDerefBdd(manager, t);
+	return(NULL);
+    }
+    cuddRef(e);
+
+    if (t == e) {
+	r = t;
+    } else {
+	if (Cudd_IsComplement(t)) {
+	    r = cuddUniqueInter(manager,(int)index,Cudd_Not(t),Cudd_Not(e));
+	    if (r == NULL) {
+		Cudd_IterDerefBdd(manager, t);
+		Cudd_IterDerefBdd(manager, e);
+		return(NULL);
+	    }
+	    r = Cudd_Not(r);
+	} else {
+	    r = cuddUniqueInter(manager,(int)index,t,e);
+	    if (r == NULL) {
+		Cudd_IterDerefBdd(manager, t);
+		Cudd_IterDerefBdd(manager, e);
+		return(NULL);
+	    }
+	}
+    }
+    cuddDeref(e);
+    cuddDeref(t);
+    cuddCacheInsert2(manager, Cudd_preciseBddXor, f, g, r);
+    return(r);
+
+} /* end of cuddPreciseBddXorRecur */
 
 /*---------------------------------------------------------------------------*/
 /* Definition of static functions                                            */
@@ -1393,6 +2048,11 @@ bddVarToCanonical(
     *topgp = cuddI(dd,g->index);
     *tophp = cuddI(dd,Cudd_Regular(h)->index);
 
+    #ifdef DD_DEBUG
+    assert(f != Cudd_Not(DD_UNKNOWN(dd)));
+    assert(g != Cudd_Not(DD_UNKNOWN(dd)));
+    assert(h != Cudd_Not(DD_UNKNOWN(dd)));
+    #endif
     return(comple);
 
 } /* end of bddVarToCanonical */
@@ -1429,6 +2089,21 @@ bddVarToCanonicalSimple(
     f = *fp;
     g = *gp;
     h = *hp;
+    
+    #ifdef DD_DEBUG
+    assert(!Cudd_IsConstant(f));
+    assert(!Cudd_IsConstant(g));
+    if (h == DD_ONE(dd)) {
+       assert(0);
+    } else if (h == Cudd_Not(DD_ONE(dd))) {
+       assert(0);
+    } else if (h == DD_UNKNOWN(dd)) {
+       assert(0);
+    } else if (h == Cudd_Not(DD_UNKNOWN(dd))) {
+       assert(0);
+    }
+    assert(!Cudd_IsConstant(h));
+    #endif
 
     change = 0;
 
@@ -1456,10 +2131,16 @@ bddVarToCanonicalSimple(
     /* Here we can skip the use of cuddI, because the operands are known
     ** to be non-constant.
     */
+    
     *topfp = (f != unknown) ? dd->perm[f->index]               : INT_MAX;
     *topgp = (g != unknown) ? dd->perm[g->index]               : INT_MAX;
     *tophp = (h != unknown) ? dd->perm[Cudd_Regular(h)->index] : INT_MAX;
 
+    #ifdef DD_DEBUG
+    assert(f != Cudd_Not(unknown));
+    assert(g != Cudd_Not(unknown));
+    assert(h != Cudd_Not(unknown));
+    #endif
     return(comple);
 
 } /* end of bddVarToCanonicalSimple */

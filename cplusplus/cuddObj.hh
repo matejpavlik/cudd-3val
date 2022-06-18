@@ -186,7 +186,9 @@ public:
     BDD operator-=(const BDD& other);
     friend std::ostream & operator<<(std::ostream & os, BDD const & f);
     bool IsZero() const;
+    bool IsUnknown() const;
     bool IsVar() const;
+    bool IsPrecise() const;
     BDD AndAbstract(const BDD& g, const BDD& cube, unsigned int limit = 0)
 	const;
     BDD UnderApprox(
@@ -210,6 +212,8 @@ public:
     BDD ExistAbstract(const BDD& cube, unsigned int limit = 0) const;
     BDD XorExistAbstract(const BDD& g, const BDD& cube) const;
     BDD UnivAbstract(const BDD& cube) const;
+    BDD ForgetOnes() const;
+    BDD ForgetZeros() const;
     BDD BooleanDiff(int x) const;
     bool VarIsDependent(const BDD& var) const;
     double Correlation(const BDD& g) const;
@@ -223,6 +227,13 @@ public:
     BDD Nor(const BDD& g) const;
     BDD Xor(const BDD& g) const;
     BDD Xnor(const BDD& g, unsigned int limit = 0) const;
+    BDD IteP(const BDD& g, const BDD& h) const;
+    BDD AndP(const BDD& g) const;
+    BDD OrP(const BDD& g) const;
+    BDD NandP(const BDD& g) const;
+    BDD NorP(const BDD& g) const;
+    BDD XorP(const BDD& g) const;
+    BDD XnorP(const BDD& g) const;
     bool Leq(const BDD& g) const;
     ADD Add() const;
     BDD Transfer(Cudd& destination) const;
@@ -281,6 +292,8 @@ public:
     int EstimateCofactorSimple(int i) const;
     void PickOneCube(char * string) const;
     BDD PickOneMinterm(std::vector<BDD> vars) const;
+    BDD PickOneMintermUnder(std::vector<BDD> vars) const;
+    BDD PickOneMintermOver(std::vector<BDD> vars) const;
     BDD zddIsop(const BDD& U, ZDD* zdd_I) const;
     BDD Isop(const BDD& U) const;
     ZDD PortToZdd() const;
@@ -485,6 +498,7 @@ public:
     BDD bddVar(int index) const;
     BDD bddOne(void) const;
     BDD bddZero(void) const;
+    BDD bddUnknown(void) const;
     ADD addVar(void) const;
     ADD addVar(int index) const;
     ADD addOne(void) const;

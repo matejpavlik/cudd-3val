@@ -1126,6 +1126,7 @@ cuddUniqueInter(
 #ifdef DD_DEBUG
     assert(Cudd_Regular(T) == T);
     assert(T != DD_UNKNOWN(unique) || Cudd_Regular(E) == E);
+    assert(E != Cudd_Not(DD_UNKNOWN(unique)));
 #endif
 
     int pos;
@@ -1313,6 +1314,11 @@ cuddUniqueInter(
 
 #ifdef DD_DEBUG
     cuddCheckCollisionOrdering(unique,level,pos);
+#endif
+
+#ifdef DD_DEBUG
+    assert(looking == NULL || cuddE(looking) != Cudd_Not(DD_UNKNOWN(unique)));
+    assert(looking == NULL || cuddT(looking) != Cudd_Not(DD_UNKNOWN(unique)));
 #endif
 
     return(looking);

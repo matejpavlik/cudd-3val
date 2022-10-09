@@ -3700,6 +3700,18 @@ BDD::XnorP(
 } // BDD::XnorP
 
 
+BDD
+BDD::ReduceByVal(
+  const BDD& val) const
+{
+    DdManager *mgr = checkSameManager(val);
+    DdNode *result = Cudd_BddReduceByValuation(mgr, node, val.node);
+    checkReturnValue(result);
+    return BDD(p, result);
+
+} // BDD::ReduceByVal
+
+
 bool
 BDD::Leq(
   const BDD& g) const

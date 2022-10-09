@@ -234,6 +234,7 @@ public:
     BDD NorP(const BDD& g) const;
     BDD XorP(const BDD& g) const;
     BDD XnorP(const BDD& g) const;
+    BDD ReduceByVal(const BDD& val) const;
     bool Leq(const BDD& g) const;
     ADD Add() const;
     BDD Transfer(Cudd& destination) const;

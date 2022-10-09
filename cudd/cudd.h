@@ -980,6 +980,7 @@ extern int Cudd_bddIsVarHardGroup(DdManager *dd, int index);
 extern DdNode * Cudd_BddForgetZeros(DdManager *dd, DdNode *f);
 extern DdNode * Cudd_BddForgetOnes(DdManager *dd, DdNode *f);
 extern DdNode * Cudd_BddMergeInterval(DdManager *dd, DdNode *under, DdNode *over);
+extern DdNode * Cudd_BddReduceByValuation(DdManager *dd, DdNode *bdd, DdNode *val);
 #ifdef MTR_H_
 extern MtrNode * Cudd_ReadTree(DdManager *dd);
 extern void Cudd_SetTree(DdManager *dd, MtrNode *tree);

@@ -984,11 +984,11 @@ cuddBddIteRecur(
     if (f == zero) 	/* ITE(0,G,H) = H */
         return(h);
 
-    if ((((f == unknown) + (g == unknown) + (h == unknown)) >= 2)
-        || (f == unknown && g == Cudd_NotCond(h,h != unknown)))
+    if ((((Cudd_Regular(f) == unknown) + (Cudd_Regular(g) == unknown) + (Cudd_Regular(h) == unknown)) >= 2)
+        || (Cudd_Regular(f) == unknown && g == Cudd_NotCond(h,h != unknown)))
         return(unknown);
 
-    if (f == unknown) {
+    if (Cudd_Regular(f) == unknown) {
         return(unknown);
     
         // possible alternatives
@@ -1033,7 +1033,7 @@ cuddBddIteRecur(
     if (g == Cudd_Not(h)) { /* ITE(F,G,!G) = F <-> G */
         res = cuddBddXorRecur(dd,f,h);
         return(res);
-    } else if (g == unknown || h == unknown) {
+    } else if (Cudd_Regular(g) == unknown || Cudd_Regular(h) == unknown) {
         return unknown;
     }
 

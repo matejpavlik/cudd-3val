@@ -1165,7 +1165,7 @@ ddGroupSiftingUp(
 		   table->subtables[y].next == (unsigned) y) {
 	    /* x and y are self groups */
 	    xindex = table->invperm[x];
-	    size = cuddSwapInPlace(table,x,y);
+	    size = cuddSwapInPlace(table,x,y,0);
 #ifdef DD_DEBUG
 	    assert(table->subtables[x].next == (unsigned) x);
 	    assert(table->subtables[y].next == (unsigned) y);
@@ -1332,7 +1332,7 @@ ddGroupSiftingDown(
 		isolated = table->vars[yindex]->ref == 1;
 		R -= table->subtables[y].keys - isolated;
 	    }
-	    size = cuddSwapInPlace(table,x,y);
+	    size = cuddSwapInPlace(table,x,y,0);
 #ifdef DD_DEBUG
 	    assert(table->subtables[x].next == (unsigned) x);
 	    assert(table->subtables[y].next == (unsigned) y);
@@ -1448,7 +1448,7 @@ ddGroupMove(
     /* Sift the variables of the second group up through the first group */
     for (i = 1; i <= ysize; i++) {
 	for (j = 1; j <= xsize; j++) {
-	    size = cuddSwapInPlace(table,x,y);
+	    size = cuddSwapInPlace(table,x,y,0);
 	    if (size == 0) goto ddGroupMoveOutOfMem;
 #if defined(DD_DEBUG) && defined(DD_VERBOSE)
 	    if (size < bestSize)
@@ -1546,7 +1546,7 @@ ddGroupMoveBackward(
     /* Sift the variables of the second group up through the first group */
     for (i = 1; i <= ysize; i++) {
 	for (j = 1; j <= xsize; j++) {
-	    size = cuddSwapInPlace(table,x,y);
+	    size = cuddSwapInPlace(table,x,y,0);
 	    if (size == 0)
 		return(0);
 	    y = x;
@@ -1665,7 +1665,7 @@ ddGroupSiftingBackward(
 	}
 	if ((table->subtables[move->x].next == move->x) &&
 	(table->subtables[move->y].next == move->y)) {
-	    res = cuddSwapInPlace(table,(int)move->x,(int)move->y);
+	    res = cuddSwapInPlace(table,(int)move->x,(int)move->y,0);
 	    if (!res) return(0);
 #ifdef DD_DEBUG
 	    if (table->enableExtraDebug > 0)

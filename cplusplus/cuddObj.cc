@@ -1774,6 +1774,24 @@ Cudd::UnregisterOutOfMemoryCallback() const
 } // Cudd::UnregisterOutOfMemoryCallback
 
 
+bool
+Cudd::SetVarOrderConstraint(
+  int upperVarIndex,
+  int lowerVarIndex) const
+{
+    return Cudd_SetVarOrderConstraint(p->manager, upperVarIndex, lowerVarIndex) == 1;
+} // Cudd::setVarOrderConstraint
+
+
+bool
+Cudd::RemoveVarOrderConstraint(
+  int upperVarIndex,
+  int lowerVarIndex) const
+{
+    return Cudd_RemoveVarOrderConstraint(p->manager, upperVarIndex, lowerVarIndex) == 1;
+} // Cudd::removeVarOrderConstraint
+
+
 void
 Cudd::AutodynEnable(
   Cudd_ReorderingType method) const

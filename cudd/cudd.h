@@ -536,6 +536,8 @@ extern DD_OOMFP Cudd_RegisterOutOfMemoryCallback(DdManager *unique, DD_OOMFP cal
 extern void Cudd_UnregisterOutOfMemoryCallback(DdManager *unique);
 extern void Cudd_RegisterTimeoutHandler(DdManager *unique, DD_TOHFP handler, void *arg);
 extern DD_TOHFP Cudd_ReadTimeoutHandler(DdManager *unique, void **argp);
+extern int Cudd_SetVarOrderConstraint(DdManager *unique, int upperVarIndex, int lowerVarIndex);
+extern int Cudd_RemoveVarOrderConstraint(DdManager *unique, int upperVarIndex, int lowerVarIndex);
 extern void Cudd_AutodynEnable(DdManager *unique, Cudd_ReorderingType method);
 extern void Cudd_AutodynDisable(DdManager *unique);
 extern int Cudd_ReorderingStatus(DdManager *unique, Cudd_ReorderingType *method);

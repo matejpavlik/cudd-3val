@@ -196,10 +196,10 @@ ddWindow2(
     res = (int) (table->keys - table->isolated);
     for (x = low; x < high; x++) {
 	size = res;
-	res = cuddSwapInPlace(table,x,x+1);
+	res = cuddSwapInPlace(table,x,x+1,0);
 	if (res == 0) return(0);
 	if (res >= size) { /* no improvement: undo permutation */
-	    res = cuddSwapInPlace(table,x,x+1);
+	    res = cuddSwapInPlace(table,x,x+1,0);
 	    if (res == 0) return(0);
 	}
 #ifdef DD_STATS
@@ -264,13 +264,13 @@ ddWindowConv2(
 	for (x=0; x<nwin; x++) {
 	    if (events[x]) {
 		size = res;
-		res = cuddSwapInPlace(table,x+low,x+low+1);
+		res = cuddSwapInPlace(table,x+low,x+low+1,0);
 		if (res == 0) {
 		    FREE(events);
 		    return(0);
 		}
 		if (res >= size) { /* no improvement: undo permutation */
-		    res = cuddSwapInPlace(table,x+low,x+low+1);
+		    res = cuddSwapInPlace(table,x+low,x+low+1,0);
 		    if (res == 0) {
 			FREE(events);
 			return(0);
@@ -344,35 +344,35 @@ ddPermuteWindow3(
     best = ABC;
 
 #define	BAC 2
-    sizeNew = cuddSwapInPlace(table,x,y);
+    sizeNew = cuddSwapInPlace(table,x,y,0);
     if (sizeNew < size) {
 	if (sizeNew == 0) return(0);
 	best = BAC;
 	size = sizeNew;
     }
 #define BCA 3
-    sizeNew = cuddSwapInPlace(table,y,z);
+    sizeNew = cuddSwapInPlace(table,y,z,0);
     if (sizeNew < size) {
 	if (sizeNew == 0) return(0);
 	best = BCA;
 	size = sizeNew;
     }
 #define CBA 4
-    sizeNew = cuddSwapInPlace(table,x,y);
+    sizeNew = cuddSwapInPlace(table,x,y,0);
     if (sizeNew < size) {
 	if (sizeNew == 0) return(0);
 	best = CBA;
 	size = sizeNew;
     }
 #define CAB 5
-    sizeNew = cuddSwapInPlace(table,y,z);
+    sizeNew = cuddSwapInPlace(table,y,z,0);
     if (sizeNew < size) {
 	if (sizeNew == 0) return(0);
 	best = CAB;
 	size = sizeNew;
     }
 #define ACB 6
-    sizeNew = cuddSwapInPlace(table,x,y);
+    sizeNew = cuddSwapInPlace(table,x,y,0);
     if (sizeNew < size) {
 	if (sizeNew == 0) return(0);
 	best = ACB;
@@ -383,12 +383,12 @@ ddPermuteWindow3(
     ** The initial permutation is ACB.
     */
     switch(best) {
-    case BCA: if (!cuddSwapInPlace(table,y,z)) return(0);
-    case CBA: if (!cuddSwapInPlace(table,x,y)) return(0);
-    case ABC: if (!cuddSwapInPlace(table,y,z)) return(0);
+    case BCA: if (!cuddSwapInPlace(table,y,z,0)) return(0);
+    case CBA: if (!cuddSwapInPlace(table,x,y,0)) return(0);
+    case ABC: if (!cuddSwapInPlace(table,y,z,0)) return(0);
     case ACB: break;
-    case BAC: if (!cuddSwapInPlace(table,y,z)) return(0);
-    case CAB: if (!cuddSwapInPlace(table,x,y)) return(0);
+    case BAC: if (!cuddSwapInPlace(table,y,z,0)) return(0);
+    case CAB: if (!cuddSwapInPlace(table,x,y,0)) return(0);
 	       break;
     default: return(0);
     }
@@ -591,161 +591,161 @@ ddPermuteWindow4(
     best = ABCD;
 
 #define	BACD 7
-    sizeNew = cuddSwapInPlace(table,w,x);
+    sizeNew = cuddSwapInPlace(table,w,x,0);
     if (sizeNew < size) {
 	if (sizeNew == 0) return(0);
 	best = BACD;
 	size = sizeNew;
     }
 #define BADC 13
-    sizeNew = cuddSwapInPlace(table,y,z);
+    sizeNew = cuddSwapInPlace(table,y,z,0);
     if (sizeNew < size) {
 	if (sizeNew == 0) return(0);
 	best = BADC;
 	size = sizeNew;
     }
 #define ABDC 8
-    sizeNew = cuddSwapInPlace(table,w,x);
+    sizeNew = cuddSwapInPlace(table,w,x,0);
     if (sizeNew < size || (sizeNew == size && ABDC < best)) {
 	if (sizeNew == 0) return(0);
 	best = ABDC;
 	size = sizeNew;
     }
 #define ADBC 14
-    sizeNew = cuddSwapInPlace(table,x,y);
+    sizeNew = cuddSwapInPlace(table,x,y,0);
     if (sizeNew < size) {
 	if (sizeNew == 0) return(0);
 	best = ADBC;
 	size = sizeNew;
     }
 #define ADCB 9
-    sizeNew = cuddSwapInPlace(table,y,z);
+    sizeNew = cuddSwapInPlace(table,y,z,0);
     if (sizeNew < size || (sizeNew == size && ADCB < best)) {
 	if (sizeNew == 0) return(0);
 	best = ADCB;
 	size = sizeNew;
     }
 #define DACB 15
-    sizeNew = cuddSwapInPlace(table,w,x);
+    sizeNew = cuddSwapInPlace(table,w,x,0);
     if (sizeNew < size) {
 	if (sizeNew == 0) return(0);
 	best = DACB;
 	size = sizeNew;
     }
 #define DABC 20
-    sizeNew = cuddSwapInPlace(table,y,z);
+    sizeNew = cuddSwapInPlace(table,y,z,0);
     if (sizeNew < size) {
 	if (sizeNew == 0) return(0);
 	best = DABC;
 	size = sizeNew;
     }
 #define DBAC 23
-    sizeNew = cuddSwapInPlace(table,x,y);
+    sizeNew = cuddSwapInPlace(table,x,y,0);
     if (sizeNew < size) {
 	if (sizeNew == 0) return(0);
 	best = DBAC;
 	size = sizeNew;
     }
 #define BDAC 19
-    sizeNew = cuddSwapInPlace(table,w,x);
+    sizeNew = cuddSwapInPlace(table,w,x,0);
     if (sizeNew < size || (sizeNew == size && BDAC < best)) {
 	if (sizeNew == 0) return(0);
 	best = BDAC;
 	size = sizeNew;
     }
 #define BDCA 21
-    sizeNew = cuddSwapInPlace(table,y,z);
+    sizeNew = cuddSwapInPlace(table,y,z,0);
     if (sizeNew < size || (sizeNew == size && BDCA < best)) {
 	if (sizeNew == 0) return(0);
 	best = BDCA;
 	size = sizeNew;
     }
 #define DBCA 24
-    sizeNew = cuddSwapInPlace(table,w,x);
+    sizeNew = cuddSwapInPlace(table,w,x,0);
     if (sizeNew < size) {
 	if (sizeNew == 0) return(0);
 	best = DBCA;
 	size = sizeNew;
     }
 #define DCBA 22
-    sizeNew = cuddSwapInPlace(table,x,y);
+    sizeNew = cuddSwapInPlace(table,x,y,0);
     if (sizeNew < size || (sizeNew == size && DCBA < best)) {
 	if (sizeNew == 0) return(0);
 	best = DCBA;
 	size = sizeNew;
     }
 #define DCAB 18
-    sizeNew = cuddSwapInPlace(table,y,z);
+    sizeNew = cuddSwapInPlace(table,y,z,0);
     if (sizeNew < size || (sizeNew == size && DCAB < best)) {
 	if (sizeNew == 0) return(0);
 	best = DCAB;
 	size = sizeNew;
     }
 #define CDAB 12
-    sizeNew = cuddSwapInPlace(table,w,x);
+    sizeNew = cuddSwapInPlace(table,w,x,0);
     if (sizeNew < size || (sizeNew == size && CDAB < best)) {
 	if (sizeNew == 0) return(0);
 	best = CDAB;
 	size = sizeNew;
     }
 #define CDBA 17
-    sizeNew = cuddSwapInPlace(table,y,z);
+    sizeNew = cuddSwapInPlace(table,y,z,0);
     if (sizeNew < size || (sizeNew == size && CDBA < best)) {
 	if (sizeNew == 0) return(0);
 	best = CDBA;
 	size = sizeNew;
     }
 #define CBDA 11
-    sizeNew = cuddSwapInPlace(table,x,y);
+    sizeNew = cuddSwapInPlace(table,x,y,0);
     if (sizeNew < size || (sizeNew == size && CBDA < best)) {
 	if (sizeNew == 0) return(0);
 	best = CBDA;
 	size = sizeNew;
     }
 #define BCDA 16
-    sizeNew = cuddSwapInPlace(table,w,x);
+    sizeNew = cuddSwapInPlace(table,w,x,0);
     if (sizeNew < size || (sizeNew == size && BCDA < best)) {
 	if (sizeNew == 0) return(0);
 	best = BCDA;
 	size = sizeNew;
     }
 #define BCAD 10
-    sizeNew = cuddSwapInPlace(table,y,z);
+    sizeNew = cuddSwapInPlace(table,y,z,0);
     if (sizeNew < size || (sizeNew == size && BCAD < best)) {
 	if (sizeNew == 0) return(0);
 	best = BCAD;
 	size = sizeNew;
     }
 #define CBAD 5
-    sizeNew = cuddSwapInPlace(table,w,x);
+    sizeNew = cuddSwapInPlace(table,w,x,0);
     if (sizeNew < size || (sizeNew == size && CBAD < best)) {
 	if (sizeNew == 0) return(0);
 	best = CBAD;
 	size = sizeNew;
     }
 #define CABD 3
-    sizeNew = cuddSwapInPlace(table,x,y);
+    sizeNew = cuddSwapInPlace(table,x,y,0);
     if (sizeNew < size || (sizeNew == size && CABD < best)) {
 	if (sizeNew == 0) return(0);
 	best = CABD;
 	size = sizeNew;
     }
 #define CADB 6
-    sizeNew = cuddSwapInPlace(table,y,z);
+    sizeNew = cuddSwapInPlace(table,y,z,0);
     if (sizeNew < size || (sizeNew == size && CADB < best)) {
 	if (sizeNew == 0) return(0);
 	best = CADB;
 	size = sizeNew;
     }
 #define ACDB 4
-    sizeNew = cuddSwapInPlace(table,w,x);
+    sizeNew = cuddSwapInPlace(table,w,x,0);
     if (sizeNew < size || (sizeNew == size && ACDB < best)) {
 	if (sizeNew == 0) return(0);
 	best = ACDB;
 	size = sizeNew;
     }
 #define ACBD 2
-    sizeNew = cuddSwapInPlace(table,y,z);
+    sizeNew = cuddSwapInPlace(table,y,z,0);
     if (sizeNew < size || (sizeNew == size && ACBD < best)) {
 	if (sizeNew == 0) return(0);
 	best = ACBD;
@@ -756,38 +756,38 @@ ddPermuteWindow4(
     ** The initial permutation is ACBD.
     */
     switch(best) {
-    case DBCA: if (!cuddSwapInPlace(table,y,z)) return(0);
-    case BDCA: if (!cuddSwapInPlace(table,x,y)) return(0);
-    case CDBA: if (!cuddSwapInPlace(table,w,x)) return(0);
-    case ADBC: if (!cuddSwapInPlace(table,y,z)) return(0);
-    case ABDC: if (!cuddSwapInPlace(table,x,y)) return(0);
-    case ACDB: if (!cuddSwapInPlace(table,y,z)) return(0);
+    case DBCA: if (!cuddSwapInPlace(table,y,z,0)) return(0);
+    case BDCA: if (!cuddSwapInPlace(table,x,y,0)) return(0);
+    case CDBA: if (!cuddSwapInPlace(table,w,x,0)) return(0);
+    case ADBC: if (!cuddSwapInPlace(table,y,z,0)) return(0);
+    case ABDC: if (!cuddSwapInPlace(table,x,y,0)) return(0);
+    case ACDB: if (!cuddSwapInPlace(table,y,z,0)) return(0);
     case ACBD: break;
-    case DCBA: if (!cuddSwapInPlace(table,y,z)) return(0);
-    case BCDA: if (!cuddSwapInPlace(table,x,y)) return(0);
-    case CBDA: if (!cuddSwapInPlace(table,w,x)) return(0);
-	       if (!cuddSwapInPlace(table,x,y)) return(0);
-	       if (!cuddSwapInPlace(table,y,z)) return(0);
+    case DCBA: if (!cuddSwapInPlace(table,y,z,0)) return(0);
+    case BCDA: if (!cuddSwapInPlace(table,x,y,0)) return(0);
+    case CBDA: if (!cuddSwapInPlace(table,w,x,0)) return(0);
+	       if (!cuddSwapInPlace(table,x,y,0)) return(0);
+	       if (!cuddSwapInPlace(table,y,z,0)) return(0);
 	       break;
-    case DBAC: if (!cuddSwapInPlace(table,x,y)) return(0);
-    case DCAB: if (!cuddSwapInPlace(table,w,x)) return(0);
-    case DACB: if (!cuddSwapInPlace(table,y,z)) return(0);
-    case BACD: if (!cuddSwapInPlace(table,x,y)) return(0);
-    case CABD: if (!cuddSwapInPlace(table,w,x)) return(0);
+    case DBAC: if (!cuddSwapInPlace(table,x,y,0)) return(0);
+    case DCAB: if (!cuddSwapInPlace(table,w,x,0)) return(0);
+    case DACB: if (!cuddSwapInPlace(table,y,z,0)) return(0);
+    case BACD: if (!cuddSwapInPlace(table,x,y,0)) return(0);
+    case CABD: if (!cuddSwapInPlace(table,w,x,0)) return(0);
 	       break;
-    case DABC: if (!cuddSwapInPlace(table,y,z)) return(0);
-    case BADC: if (!cuddSwapInPlace(table,x,y)) return(0);
-    case CADB: if (!cuddSwapInPlace(table,w,x)) return(0);
-	       if (!cuddSwapInPlace(table,y,z)) return(0);
+    case DABC: if (!cuddSwapInPlace(table,y,z,0)) return(0);
+    case BADC: if (!cuddSwapInPlace(table,x,y,0)) return(0);
+    case CADB: if (!cuddSwapInPlace(table,w,x,0)) return(0);
+	       if (!cuddSwapInPlace(table,y,z,0)) return(0);
 	       break;
-    case BDAC: if (!cuddSwapInPlace(table,x,y)) return(0);
-    case CDAB: if (!cuddSwapInPlace(table,w,x)) return(0);
-    case ADCB: if (!cuddSwapInPlace(table,y,z)) return(0);
-    case ABCD: if (!cuddSwapInPlace(table,x,y)) return(0);
+    case BDAC: if (!cuddSwapInPlace(table,x,y,0)) return(0);
+    case CDAB: if (!cuddSwapInPlace(table,w,x,0)) return(0);
+    case ADCB: if (!cuddSwapInPlace(table,y,z,0)) return(0);
+    case ABCD: if (!cuddSwapInPlace(table,x,y,0)) return(0);
 	       break;
-    case BCAD: if (!cuddSwapInPlace(table,x,y)) return(0);
-    case CBAD: if (!cuddSwapInPlace(table,w,x)) return(0);
-	       if (!cuddSwapInPlace(table,x,y)) return(0);
+    case BCAD: if (!cuddSwapInPlace(table,x,y,0)) return(0);
+    case CBAD: if (!cuddSwapInPlace(table,w,x,0)) return(0);
+	       if (!cuddSwapInPlace(table,x,y,0)) return(0);
 	       break;
     default: return(0);
     }

@@ -1233,7 +1233,7 @@ ddSymmSiftingUp(
 		   table->subtables[y].next == (unsigned) y) {
 	    /* x and y have self symmetry */
 	    xindex = table->invperm[x];
-	    size = cuddSwapInPlace(table,x,y);
+	    size = cuddSwapInPlace(table,x,y,0);
 #ifdef DD_DEBUG
 	    assert(table->subtables[x].next == (unsigned) x);
 	    assert(table->subtables[y].next == (unsigned) y);
@@ -1369,7 +1369,7 @@ ddSymmSiftingDown(
 		isolated = table->vars[yindex]->ref == 1;
 		R -= (int) table->subtables[y].keys - isolated;
 	    }
-	    size = cuddSwapInPlace(table,x,y);
+	    size = cuddSwapInPlace(table,x,y,0);
 #ifdef DD_DEBUG
 	    assert(table->subtables[x].next == (unsigned) x);
 	    assert(table->subtables[y].next == (unsigned) y);
@@ -1470,7 +1470,7 @@ ddSymmGroupMove(
     /* Sift the variables of the second group up through the first group. */
     for (i = 1; i <= ysize; i++) {
 	for (j = 1; j <= xsize; j++) {
-	    size = cuddSwapInPlace(table,x,y);
+	    size = cuddSwapInPlace(table,x,y,0);
 	    if (size == 0) return(0);
 	    swapx = x; swapy = y;
 	    y = x;
@@ -1552,7 +1552,7 @@ ddSymmGroupMoveBackward(
     /* Sift the variables of the second group up through the first group. */
     for (i = 1; i <= ysize; i++) {
 	for (j = 1; j <= xsize; j++) {
-	    size = cuddSwapInPlace(table,x,y);
+	    size = cuddSwapInPlace(table,x,y,0);
 	    if (size == 0) return(0);
 	    y = x;
 	    x = cuddNextLow(table,y);
@@ -1613,7 +1613,7 @@ ddSymmSiftingBackward(
     for (move = moves; move != NULL; move = move->next) {
 	if (move->size == size) return(1);
 	if (table->subtables[move->x].next == move->x && table->subtables[move->y].next == move->y) {
-	    res = cuddSwapInPlace(table,(int)move->x,(int)move->y);
+	    res = cuddSwapInPlace(table,(int)move->x,(int)move->y,0);
 #ifdef DD_DEBUG
 	    assert(table->subtables[move->x].next == move->x);
 	    assert(table->subtables[move->y].next == move->y);

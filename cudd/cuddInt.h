@@ -377,6 +377,11 @@ struct DdCache {
 };
 
 /**
+ *  @brief BST of variable indices
+ */
+typedef void *DdIndices;
+
+/**
  *  @brief Subtable for one index.
  */
 struct DdSubtable {
@@ -388,6 +393,7 @@ struct DdSubtable {
     unsigned int dead;		/**< number of dead nodes in this table */
     unsigned int next;		/**< index of next variable in group */
     int bindVar;		/**< flag to bind this variable to its level */
+    DdIndices stayAboveIndices;	/**< keep this variable above variables with these indices during reordering */
     /* Fields for lazy sifting. */
     Cudd_VariableType varType;  /**< variable type (ps, ns, pi) */
     int pairIndex;              /**< corresponding variable index (ps <-> ns) */
@@ -1179,11 +1185,13 @@ extern void cuddReclaimZdd(DdManager *table, DdNode *n);
 extern void cuddClearDeathRow(DdManager *table);
 extern void cuddShrinkDeathRow(DdManager *table);
 extern DdNode * cuddDynamicAllocNode(DdManager *table);
+extern int cuddCompareVarIndices(const void *pa, const void *pb);
+extern int cuddVarOrderConstraintExists(DdManager *table, int upperVarIndex, int lowerVarIndex);
 extern int cuddSifting(DdManager *table, int lower, int upper);
 extern int cuddSwapping(DdManager *table, int lower, int upper, Cudd_ReorderingType heuristic);
 extern int cuddNextHigh(DdManager *table, int x);
 extern int cuddNextLow(DdManager *table, int x);
-extern int cuddSwapInPlace(DdManager *table, int x, int y);
+extern int cuddSwapInPlace(DdManager *table, int x, int y, int checkConstraints);
 extern int cuddBddAlignToZdd(DdManager *table);
 extern DdNode * cuddBddMakePrime(DdManager *dd, DdNode *cube, DdNode *f);
 extern DdNode * cuddSolveEqnRecur(DdManager *bdd, DdNode *F, DdNode *Y, DdNode **G, int n, int *yIndex, int i);

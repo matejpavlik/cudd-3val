@@ -998,7 +998,7 @@ ddLinearAndSiftingUp(
 	    (void) fprintf(table->out, "checkL(%d) != L(%d)\n",checkL,L);
 	}
 #endif
-	size = cuddSwapInPlace(table,x,y);
+	size = cuddSwapInPlace(table,x,y,0);
 	if (size == 0) goto ddLinearAndSiftingUpOutOfMem;
 	newsize = cuddLinearInPlace(table,x,y);
 	if (newsize == 0) goto ddLinearAndSiftingUpOutOfMem;
@@ -1116,7 +1116,7 @@ ddLinearAndSiftingDown(
 	    isolated = table->vars[yindex]->ref == 1;
 	    R -= (int) table->subtables[y].keys - isolated;
 	}
-	size = cuddSwapInPlace(table,x,y);
+	size = cuddSwapInPlace(table,x,y,0);
 	if (size == 0) goto ddLinearAndSiftingDownOutOfMem;
 	newsize = cuddLinearInPlace(table,x,y);
 	if (newsize == 0) goto ddLinearAndSiftingDownOutOfMem;
@@ -1194,7 +1194,7 @@ ddLinearAndSiftingBackward(
 	    res = cuddLinearInPlace(table,(int)move->x,(int)move->y);
 	    if (!res) return(0);
 	}
-	res = cuddSwapInPlace(table,(int)move->x,(int)move->y);
+	res = cuddSwapInPlace(table,(int)move->x,(int)move->y,0);
 	if (!res) return(0);
 	if (move->flags == CUDD_INVERSE_TRANSFORM_MOVE) {
 	    res = cuddLinearInPlace(table,(int)move->x,(int)move->y);
@@ -1235,20 +1235,20 @@ ddUndoMoves(
 	invmoves = invmove;
 	if (move->flags == CUDD_SWAP_MOVE) {
 	    invmove->flags = CUDD_SWAP_MOVE;
-	    size = cuddSwapInPlace(table,(int)move->x,(int)move->y);
+	    size = cuddSwapInPlace(table,(int)move->x,(int)move->y,0);
 	    if (!size) goto ddUndoMovesOutOfMem;
 	} else if (move->flags == CUDD_LINEAR_TRANSFORM_MOVE) {
 	    invmove->flags = CUDD_INVERSE_TRANSFORM_MOVE;
 	    size = cuddLinearInPlace(table,(int)move->x,(int)move->y);
 	    if (!size) goto ddUndoMovesOutOfMem;
-	    size = cuddSwapInPlace(table,(int)move->x,(int)move->y);
+	    size = cuddSwapInPlace(table,(int)move->x,(int)move->y,0);
 	    if (!size) goto ddUndoMovesOutOfMem;
 	} else { /* must be CUDD_INVERSE_TRANSFORM_MOVE */
 #ifdef DD_DEBUG
 	    (void) fprintf(table->err,"Unforseen event in ddUndoMoves!\n");
 #endif
 	    invmove->flags = CUDD_LINEAR_TRANSFORM_MOVE;
-	    size = cuddSwapInPlace(table,(int)move->x,(int)move->y);
+	    size = cuddSwapInPlace(table,(int)move->x,(int)move->y,0);
 	    if (!size) goto ddUndoMovesOutOfMem;
 	    size = cuddLinearInPlace(table,(int)move->x,(int)move->y);
 	    if (!size) goto ddUndoMovesOutOfMem;

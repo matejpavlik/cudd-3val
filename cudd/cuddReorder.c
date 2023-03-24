@@ -469,6 +469,7 @@ cuddCompareVarIndices(
   @sideeffect None
 
   @see Cudd_SetVarOrderConstraint Cudd_RemoveVarOrderConstraint
+  cuddDestroyIndices
 
 */
 int

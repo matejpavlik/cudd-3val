@@ -1859,6 +1859,36 @@ cuddShrinkSubtable(
 
 
 /**
+  @brief Destroys indices BST of the variable at given level.
+
+  @details Calls tdestroy on stayAboveIndices property of the variable
+  at given level and sets the property to NULL.
+
+  @return 1 if successful; 0 otherwise.
+
+  @sideeffect Calls tdestroy on stayAboveIndices property of the variable
+  at given level and sets the property to NULL.
+
+  @see Cudd_SetVarOrderConstraint Cudd_RemoveVarOrderConstraint
+  cuddVarOrderConstraintExists
+
+*/
+int
+cuddDestroyIndices(
+  DdManager * unique,
+  int level)
+{
+    if (unique->subtables[level].stayAboveIndices == NULL) {
+        return(0);
+    }
+
+    tdestroy(unique->subtables[level].stayAboveIndices, free);
+    unique->subtables[level].stayAboveIndices = NULL;
+    return (1);
+} /* end of cuddDestroyIndices */
+
+
+/**
   @brief Inserts n new subtables in a unique table at level.
 
   @details The number n should be positive, and level should be an
@@ -2140,7 +2170,7 @@ cuddInsertSubtables(
 		unique->subtables[j].keys     = unique->subtables[j+n].keys;
 		unique->subtables[j].maxKeys  =
 		    unique->subtables[j+n].maxKeys;
-        tdestroy(unique->subtables[j].stayAboveIndices, free);
+        cuddDestroyIndices(unique, j);
         unique->subtables[j].stayAboveIndices =
                 unique->subtables[j+n].stayAboveIndices;
 		unique->subtables[j].dead     = unique->subtables[j+n].dead;
@@ -2263,7 +2293,7 @@ cuddDestroySubtables(
 	assert(subtables[level].keys == 0);
 #endif
 	FREE(nodelist);
-    tdestroy(subtables[level].stayAboveIndices, free);
+    cuddDestroyIndices(unique, level);
 	unique->memused -= sizeof(DdNodePtr) * subtables[level].slots;
 	unique->slots -= subtables[level].slots;
 	unique->dead -= subtables[level].dead;

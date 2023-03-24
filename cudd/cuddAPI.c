@@ -986,6 +986,7 @@ Cudd_ReadTimeoutHandler(
   stayAboveIndices subtable property.
 
   @see Cudd_RemoveVarOrderConstraint cuddVarOrderConstraintExists
+  cuddDestroyIndices
 
 */
 int
@@ -1033,6 +1034,7 @@ Cudd_SetVarOrderConstraint(
   stayAboveIndices subtable property, if it was present there.
 
   @see Cudd_SetVarOrderConstraint cuddVarOrderConstraintExists
+  cuddDestroyIndices
 
 */
 int

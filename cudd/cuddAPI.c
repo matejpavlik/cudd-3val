@@ -998,22 +998,22 @@ Cudd_SetVarOrderConstraint(
         lowerVarIndex >= unique->size || lowerVarIndex < 0)
         return (0);
 
-    int *ptr = malloc(sizeof(*ptr));
-    if (ptr == NULL) {
+    int *value = malloc(sizeof(*value));
+    if (value == NULL) {
         unique->errorCode = CUDD_MEMORY_OUT;
         return (0);
     }
 
-    *ptr = lowerVarIndex;
-    int **ret = tsearch(
-            ptr,
+    *value = lowerVarIndex;
+    int **foundOrInserted = tsearch(
+            value,
             &unique->subtables[unique->perm[upperVarIndex]].stayAboveIndices,
             cuddCompareVarIndices);
-    if (ret == NULL) {
+    if (foundOrInserted == NULL) {
         unique->errorCode = CUDD_MEMORY_OUT;
         return (0);
-    } else if (*ret != ptr) {
-        free(ptr);
+    } else if (*foundOrInserted != value) {
+        free(value);
     }
 
     return (1);
@@ -1045,14 +1045,28 @@ Cudd_RemoveVarOrderConstraint(
         lowerVarIndex >= unique->size || lowerVarIndex < 0)
         return (0);
 
-    int *ret = tdelete(
+    /* find tree node to dereference its value later */
+    int **varNode = tfind(
             &lowerVarIndex,
             &unique->subtables[unique->perm[upperVarIndex]].stayAboveIndices,
             cuddCompareVarIndices);
-    if (ret == NULL) {
+    if (varNode == NULL) {
         unique->errorCode = CUDD_INVALID_ARG;
         return (0);
     }
+
+    int *nodeValuePointer = *varNode;
+
+    int *deleted = tdelete(
+            &lowerVarIndex,
+            &unique->subtables[unique->perm[upperVarIndex]].stayAboveIndices,
+            cuddCompareVarIndices);
+    if (deleted == NULL) {
+        unique->errorCode = CUDD_INVALID_ARG;
+        return (0);
+    }
+
+    free(nodeValuePointer);
 
     return (1);
 } /* end of Cudd_RemoveVarOrderConstraint */

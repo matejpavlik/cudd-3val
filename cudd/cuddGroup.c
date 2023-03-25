@@ -1165,11 +1165,12 @@ ddGroupSiftingUp(
 		   table->subtables[y].next == (unsigned) y) {
 	    /* x and y are self groups */
 	    xindex = table->invperm[x];
-	    size = cuddSwapInPlace(table,x,y,0);
+	    size = cuddSwapInPlace(table,x,y,1);
 #ifdef DD_DEBUG
 	    assert(table->subtables[x].next == (unsigned) x);
 	    assert(table->subtables[y].next == (unsigned) y);
 #endif
+        if (size == -1) break; /* order constraint hit - stop sifting in this direction */
 	    if (size == 0) goto ddGroupSiftingUpOutOfMem;
 	    /* Update the lower bound. */
 	    if (cuddTestInteract(table,xindex,yindex)) {
@@ -1195,6 +1196,7 @@ ddGroupSiftingUp(
 	    if (size < limitSize) limitSize = size;
 	} else { /* Group move */
 	    size = ddGroupMove(table,x,y,moves);
+        if (size == -1) break; /* order constraint hit - stop sifting in this direction */
 	    if (size == 0) goto ddGroupSiftingUpOutOfMem;
 	    /* Update the lower bound. */
 	    z = (*moves)->y;
@@ -1332,11 +1334,12 @@ ddGroupSiftingDown(
 		isolated = table->vars[yindex]->ref == 1;
 		R -= table->subtables[y].keys - isolated;
 	    }
-	    size = cuddSwapInPlace(table,x,y,0);
+	    size = cuddSwapInPlace(table,x,y,1);
 #ifdef DD_DEBUG
 	    assert(table->subtables[x].next == (unsigned) x);
 	    assert(table->subtables[y].next == (unsigned) y);
 #endif
+        if (size == -1) break; /* order constraint hit - stop sifting in this direction */
 	    if (size == 0) goto ddGroupSiftingDownOutOfMem;
 
 	    /* Record move. */
@@ -1371,6 +1374,7 @@ ddGroupSiftingDown(
 		z++;
 	    } while (z <= gybot);
 	    size = ddGroupMove(table,x,y,moves);
+        if (size == -1) break; /* order constraint hit - stop sifting in this direction */
 	    if (size == 0) goto ddGroupSiftingDownOutOfMem;
 	    if ((double) size > (double) limitSize * table->maxGrowth)
 		return(1);
@@ -1441,6 +1445,15 @@ ddGroupMove(
 	ybot = table->subtables[ybot].next;
     ytop = y;
     ysize = ybot - ytop + 1;
+
+    /* Check if any variable from group x should stay above any variable from group y */
+    for (i = 0; i < ysize; i++) {
+        for (j = 0; j < xsize; j++) {
+            if (cuddVarOrderConstraintExists(table, table->invperm[x - j], table->invperm[y + i])) {
+                return(-1);
+            }
+        }
+    }
 
 #if defined(DD_DEBUG) && defined(DD_VERBOSE)
     initialSize = bestSize = table->keys - table->isolated;

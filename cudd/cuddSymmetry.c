@@ -1233,11 +1233,12 @@ ddSymmSiftingUp(
 		   table->subtables[y].next == (unsigned) y) {
 	    /* x and y have self symmetry */
 	    xindex = table->invperm[x];
-	    size = cuddSwapInPlace(table,x,y,0);
+	    size = cuddSwapInPlace(table,x,y,1);
 #ifdef DD_DEBUG
 	    assert(table->subtables[x].next == (unsigned) x);
 	    assert(table->subtables[y].next == (unsigned) y);
 #endif
+        if (size == -1) break; /* order constraint hit - stop sifting in this direction */
 	    if (size == 0) goto ddSymmSiftingUpOutOfMem;
 	    /* Update the lower bound. */
 	    if (cuddTestInteract(table,xindex,yindex)) {
@@ -1256,6 +1257,7 @@ ddSymmSiftingUp(
 	    if (size < limitSize) limitSize = size;
 	} else { /* Group move */
 	    size = ddSymmGroupMove(table,x,y,&moves);
+        if (size == -1) break; /* order constraint hit - stop sifting in this direction */
 	    if (size == 0) goto ddSymmSiftingUpOutOfMem;
 	    /* Update the lower bound. */
 	    z = moves->y;
@@ -1369,11 +1371,12 @@ ddSymmSiftingDown(
 		isolated = table->vars[yindex]->ref == 1;
 		R -= (int) table->subtables[y].keys - isolated;
 	    }
-	    size = cuddSwapInPlace(table,x,y,0);
+	    size = cuddSwapInPlace(table,x,y,1);
 #ifdef DD_DEBUG
 	    assert(table->subtables[x].next == (unsigned) x);
 	    assert(table->subtables[y].next == (unsigned) y);
 #endif
+        if (size == -1) break; /* order constraint hit - stop sifting in this direction */
 	    if (size == 0) goto ddSymmSiftingDownOutOfMem;
 	    move = (Move *) cuddDynamicAllocNode(table);
 	    if (move == NULL) goto ddSymmSiftingDownOutOfMem;
@@ -1398,6 +1401,7 @@ ddSymmSiftingDown(
 		z++;
 	    } while (z <= gybot);
 	    size = ddSymmGroupMove(table,x,y,&moves);
+        if (size == -1) break; /* order constraint hit - stop sifting in this direction */
 	    if (size == 0) goto ddSymmSiftingDownOutOfMem;
 	    if ((double) size > (double) limitSize * table->maxGrowth)
 		return(moves);
@@ -1466,6 +1470,15 @@ ddSymmGroupMove(
 	ybot = table->subtables[ybot].next;
     ytop = y;
     ysize = ybot - ytop + 1;
+
+    /* Check if any variable from group x should stay above any variable from group y */
+    for (i = 0; i < ysize; i++) {
+        for (j = 0; j < xsize; j++) {
+            if (cuddVarOrderConstraintExists(table, table->invperm[x - j], table->invperm[y + i])) {
+                return(-1);
+            }
+        }
+    }
 
     /* Sift the variables of the second group up through the first group. */
     for (i = 1; i <= ysize; i++) {

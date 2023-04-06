@@ -157,7 +157,7 @@ cuddSymmCheck(
   int  x,
   int  y)
 {
-    DdNode *f,*f0,*f1,*f01,*f00,*f11,*f10;
+    DdNode *f,*f0,*f1,*f01,*f00,*f11,*f10,*unknown;
     int comple;		/* f0 is complemented */
     int xsymmy;		/* x and y may be positively symmetric */
     int xsymmyp;	/* x and y may be negatively symmetric */
@@ -168,6 +168,7 @@ cuddSymmCheck(
     DdNodePtr *list;
     int slots;
     DdNode *sentinel = &(table->sentinel);
+    unknown = DD_UNKNOWN(table);
 #ifdef DD_DEBUG
     int xindex;
 #endif
@@ -218,8 +219,8 @@ cuddSymmCheck(
 		f01 = f00 = f0;
 	    }
 	    if (comple) {
-		f01 = Cudd_Not(f01);
-		f00 = Cudd_Not(f00);
+		f01 = Cudd_NotCond(f01,f01!=unknown);
+		f00 = Cudd_NotCond(f00,f00!=unknown);
 	    }
 
 	    if (f1 != DD_ONE(table) || f0 != DD_ONE(table) || f->ref != 1) {

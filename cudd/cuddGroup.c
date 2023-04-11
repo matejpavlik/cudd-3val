@@ -1878,7 +1878,7 @@ ddExtSymmCheck(
   int  x,
   int  y)
 {
-    DdNode *f,*f0,*f1,*f01,*f00,*f11,*f10;
+    DdNode *f,*f0,*f1,*f01,*f00,*f11,*f10,*unknown;
     DdNode *one;
     int comple;		/* f0 is complemented */
     int notproj;	/* f is not a projection function */
@@ -1898,6 +1898,7 @@ ddExtSymmCheck(
 
     xindex = table->invperm[x];
     yindex = table->invperm[y];
+    unknown = DD_UNKNOWN(table);
 
     /* If the two variables do not interact, we do not want to merge them. */
     if (!cuddTestInteract(table,xindex,yindex))
@@ -1959,8 +1960,8 @@ ddExtSymmCheck(
 		f01 = f00 = f0;
 	    }
 	    if (comple) {
-		f01 = Cudd_Not(f01);
-		f00 = Cudd_Not(f00);
+        f01 = Cudd_NotCond(f01,f01!=unknown);
+        f00 = Cudd_NotCond(f00,f00!=unknown);
 	    }
 
 	    /* Unless we are looking at a projection function

@@ -781,7 +781,7 @@ cuddSwapInPlace(
     Cudd_LazyGroupType groupType;
     int    posn;
     int    isolated;
-    DdNode *f,*f0,*f1,*f01,*f00,*f11,*f10,*newf1,*newf0;
+    DdNode *f,*f0,*f1,*f01,*f00,*f11,*f10,*newf1,*newf0,*unknown;
     DdNode *g,*next;
     DdNodePtr *previousP;
     DdNode *tmp;
@@ -993,8 +993,8 @@ cuddSwapInPlace(
 		f01 = f00 = f0;
 	    }
 	    if (comple) {
-		f01 = Cudd_Not(f01);
-		f00 = Cudd_Not(f00);
+        f01 = Cudd_NotCond(f01,f01!=unknown);
+        f00 = Cudd_NotCond(f00,f00!=unknown);
 	    }
 	    /* Decrease ref count of f1. */
 	    cuddSatDec(f1->ref);
@@ -1054,8 +1054,8 @@ cuddSwapInPlace(
 		/* make sure f10 is regular */
 		newcomplement = Cudd_IsComplement(f10);
 		if (newcomplement) {
-		    f10 = Cudd_Not(f10);
-		    f00 = Cudd_Not(f00);
+            f10 = Cudd_NotCond(f10,f10!=unknown);
+            f00 = Cudd_NotCond(f00,f00!=unknown);
 		}
 		/* Check xlist for triple (xindex,f10,f00). */
 		posn = ddHash(f10, f00, xshift);
@@ -1090,7 +1090,7 @@ cuddSwapInPlace(
 		    cuddSatInc(tmp->ref);
 		}
 		if (newcomplement) {
-		    newf0 = Cudd_Not(newf0);
+            newf0 = Cudd_NotCond(newf0,newf0!=unknown);
 		}
 	    }
 	    cuddE(f) = newf0;

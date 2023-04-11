@@ -804,6 +804,7 @@ cuddSwapInPlace(
 
     xindex = table->invperm[x];
     yindex = table->invperm[y];
+    unknown = DD_UNKNOWN(table);
 
     /* x should stay above y, just as it is now - stop the swap */
     if (checkConstraints && cuddVarOrderConstraintExists(table, xindex, yindex)) {

@@ -43,6 +43,9 @@
 
 */
 
+#define _GNU_SOURCE /* Use tdestroy for tsearch */
+#include <search.h>
+
 #include "util.h"
 #include "mtrInt.h"
 #include "cuddInt.h"
@@ -474,6 +477,7 @@ cuddInitTable(
 	unique->subtables[i].dead = 0;
         unique->subtables[i].next = i;
 	unique->subtables[i].maxKeys = slots * DD_MAX_SUBTABLE_DENSITY;
+    unique->subtables[i].stayAboveIndices = NULL;
 	unique->subtables[i].bindVar = 0;
 	unique->subtables[i].varType = CUDD_VAR_PRIMARY_INPUT;
 	unique->subtables[i].pairIndex = 0;
@@ -508,6 +512,7 @@ cuddInitTable(
 	unique->subtableZ[i].dead = 0;
         unique->subtableZ[i].next = i;
 	unique->subtableZ[i].maxKeys = slots * DD_MAX_SUBTABLE_DENSITY;
+    unique->subtableZ[i].stayAboveIndices = NULL;
 	nodelist = unique->subtableZ[i].nodelist = ALLOC(DdNodePtr,slots);
 	if (nodelist == NULL) {
 	    for (j = 0; (unsigned) j < numVars; j++) {
@@ -543,6 +548,7 @@ cuddInitTable(
     unique->constants.varHandled = 0;
     unique->constants.varToBeGrouped = CUDD_LAZY_NONE;
     unique->constants.maxKeys = slots * DD_MAX_SUBTABLE_DENSITY;
+    unique->constants.stayAboveIndices = NULL;
     nodelist = unique->constants.nodelist = ALLOC(DdNodePtr,slots);
     if (nodelist == NULL) {
 	for (j = 0; (unsigned) j < numVars; j++) {
@@ -1841,6 +1847,36 @@ cuddShrinkSubtable(
 
 
 /**
+  @brief Destroys indices BST of the variable at given level.
+
+  @details Calls tdestroy on stayAboveIndices property of the variable
+  at given level and sets the property to NULL.
+
+  @return 1 if successful; 0 otherwise.
+
+  @sideeffect Calls tdestroy on stayAboveIndices property of the variable
+  at given level and sets the property to NULL.
+
+  @see Cudd_SetVarOrderConstraint Cudd_RemoveVarOrderConstraint
+  cuddVarOrderConstraintExists
+
+*/
+int
+cuddDestroyIndices(
+  DdManager * unique,
+  int level)
+{
+    if (unique->subtables[level].stayAboveIndices == NULL) {
+        return(0);
+    }
+
+    tdestroy(unique->subtables[level].stayAboveIndices, free);
+    unique->subtables[level].stayAboveIndices = NULL;
+    return (1);
+} /* end of cuddDestroyIndices */
+
+
+/**
   @brief Inserts n new subtables in a unique table at level.
 
   @details The number n should be positive, and level should be an
@@ -1882,6 +1918,7 @@ cuddInsertSubtables(
 	    unique->subtables[i+n].shift    = unique->subtables[i].shift;
 	    unique->subtables[i+n].keys     = unique->subtables[i].keys;
 	    unique->subtables[i+n].maxKeys  = unique->subtables[i].maxKeys;
+        unique->subtables[i+n].stayAboveIndices  = unique->subtables[i].stayAboveIndices;
 	    unique->subtables[i+n].dead     = unique->subtables[i].dead;
             unique->subtables[i+n].next     = i+n;
 	    unique->subtables[i+n].nodelist = unique->subtables[i].nodelist;
@@ -1903,6 +1940,7 @@ cuddInsertSubtables(
 		cuddComputeFloorLog2(numSlots);
 	    unique->subtables[level+i].keys = 0;
 	    unique->subtables[level+i].maxKeys = numSlots * DD_MAX_SUBTABLE_DENSITY;
+        unique->subtables[level+i].stayAboveIndices = NULL;
 	    unique->subtables[level+i].dead = 0;
             unique->subtables[level+i].next = level+i;
 	    unique->subtables[level+i].bindVar = 0;
@@ -1986,6 +2024,7 @@ cuddInsertSubtables(
 	    newsubtables[i].shift = unique->subtables[i].shift;
 	    newsubtables[i].keys = unique->subtables[i].keys;
 	    newsubtables[i].maxKeys = unique->subtables[i].maxKeys;
+        newsubtables[i].stayAboveIndices = unique->subtables[i].stayAboveIndices;
 	    newsubtables[i].dead = unique->subtables[i].dead;
             newsubtables[i].next = i;
 	    newsubtables[i].nodelist = unique->subtables[i].nodelist;
@@ -2010,6 +2049,7 @@ cuddInsertSubtables(
 		cuddComputeFloorLog2(numSlots);
 	    newsubtables[i].keys = 0;
 	    newsubtables[i].maxKeys = numSlots * DD_MAX_SUBTABLE_DENSITY;
+        newsubtables[i].stayAboveIndices = NULL;
 	    newsubtables[i].dead = 0;
             newsubtables[i].next = i;
 	    newsubtables[i].bindVar = 0;
@@ -2036,6 +2076,7 @@ cuddInsertSubtables(
 	    newsubtables[i+n].shift    = unique->subtables[i].shift;
 	    newsubtables[i+n].keys     = unique->subtables[i].keys;
 	    newsubtables[i+n].maxKeys  = unique->subtables[i].maxKeys;
+        newsubtables[i+n].stayAboveIndices = unique->subtables[i].stayAboveIndices;
 	    newsubtables[i+n].dead     = unique->subtables[i].dead;
             newsubtables[i+n].next     = i+n;
 	    newsubtables[i+n].nodelist = unique->subtables[i].nodelist;
@@ -2117,6 +2158,9 @@ cuddInsertSubtables(
 		unique->subtables[j].keys     = unique->subtables[j+n].keys;
 		unique->subtables[j].maxKeys  =
 		    unique->subtables[j+n].maxKeys;
+        cuddDestroyIndices(unique, j);
+        unique->subtables[j].stayAboveIndices =
+                unique->subtables[j+n].stayAboveIndices;
 		unique->subtables[j].dead     = unique->subtables[j+n].dead;
                 unique->subtables[j].next     = j;
 		FREE(unique->subtables[j].nodelist);
@@ -2237,6 +2281,7 @@ cuddDestroySubtables(
 	assert(subtables[level].keys == 0);
 #endif
 	FREE(nodelist);
+    cuddDestroyIndices(unique, level);
 	unique->memused -= sizeof(DdNodePtr) * subtables[level].slots;
 	unique->slots -= subtables[level].slots;
 	unique->dead -= subtables[level].dead;
@@ -2260,6 +2305,7 @@ cuddDestroySubtables(
 	subtables[newlevel].shift = subtables[level].shift;
 	subtables[newlevel].keys = subtables[level].keys;
 	subtables[newlevel].maxKeys = subtables[level].maxKeys;
+    subtables[newlevel].stayAboveIndices = subtables[level].stayAboveIndices;
 	subtables[newlevel].dead = subtables[level].dead;
         subtables[newlevel].next = newlevel;
 	subtables[newlevel].nodelist = subtables[level].nodelist;
@@ -2326,6 +2372,7 @@ cuddResizeTableZdd(
 		cuddComputeFloorLog2(numSlots);
 	    unique->subtableZ[i].keys = 0;
 	    unique->subtableZ[i].maxKeys = numSlots * DD_MAX_SUBTABLE_DENSITY;
+        unique->subtableZ[i].stayAboveIndices = NULL;
 	    unique->subtableZ[i].dead = 0;
             unique->subtableZ[i].next = i;
 	    unique->permZ[i] = i;
@@ -2385,6 +2432,7 @@ cuddResizeTableZdd(
 	    newsubtables[i].shift = unique->subtableZ[i].shift;
 	    newsubtables[i].keys = unique->subtableZ[i].keys;
 	    newsubtables[i].maxKeys = unique->subtableZ[i].maxKeys;
+        newsubtables[i].stayAboveIndices = unique->subtableZ[i].stayAboveIndices;
 	    newsubtables[i].dead = unique->subtableZ[i].dead;
             newsubtables[i].next = i;
 	    newsubtables[i].nodelist = unique->subtableZ[i].nodelist;
@@ -2397,6 +2445,7 @@ cuddResizeTableZdd(
 		cuddComputeFloorLog2(numSlots);
 	    newsubtables[i].keys = 0;
 	    newsubtables[i].maxKeys = numSlots * DD_MAX_SUBTABLE_DENSITY;
+        newsubtables[i].stayAboveIndices = NULL;
 	    newsubtables[i].dead = 0;
             newsubtables[i].next = i;
 	    newperm[i] = i;
@@ -2611,6 +2660,7 @@ ddResizeTable(
 		cuddComputeFloorLog2(numSlots);
 	    unique->subtables[i].keys = 0;
 	    unique->subtables[i].maxKeys = numSlots * DD_MAX_SUBTABLE_DENSITY;
+        unique->subtables[i].stayAboveIndices = NULL;
 	    unique->subtables[i].dead = 0;
             unique->subtables[i].next = i;
 	    unique->subtables[i].bindVar = 0;
@@ -2714,6 +2764,7 @@ ddResizeTable(
 	    newsubtables[i].shift = unique->subtables[i].shift;
 	    newsubtables[i].keys = unique->subtables[i].keys;
 	    newsubtables[i].maxKeys = unique->subtables[i].maxKeys;
+        newsubtables[i].stayAboveIndices = unique->subtables[i].stayAboveIndices;
 	    newsubtables[i].dead = unique->subtables[i].dead;
             newsubtables[i].next = i;
 	    newsubtables[i].nodelist = unique->subtables[i].nodelist;
@@ -2733,6 +2784,7 @@ ddResizeTable(
 		cuddComputeFloorLog2(numSlots);
 	    newsubtables[i].keys = 0;
 	    newsubtables[i].maxKeys = numSlots * DD_MAX_SUBTABLE_DENSITY;
+        newsubtables[i].stayAboveIndices = NULL;
 	    newsubtables[i].dead = 0;
             newsubtables[i].next = i;
 	    newsubtables[i].bindVar = 0;

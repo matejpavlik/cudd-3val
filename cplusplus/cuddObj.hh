@@ -513,6 +513,8 @@ public:
     void UnregisterTerminationCallback(void) const;
     DD_OOMFP RegisterOutOfMemoryCallback(DD_OOMFP callback) const;
     void UnregisterOutOfMemoryCallback(void) const;
+    bool SetVarOrderConstraint(int upperVarIndex, int lowerVarIndex) const;
+    bool RemoveVarOrderConstraint(int upperVarIndex, int lowerVarIndex) const;
     void AutodynEnable(Cudd_ReorderingType method = CUDD_REORDER_SIFT) const;
     void AutodynDisable(void) const;
     bool ReorderingStatus(Cudd_ReorderingType * method) const;

@@ -564,7 +564,7 @@ ddSiftUp(
 
     y = cuddNextLow(table,x);
     while (y >= xLow) {
-	size = cuddSwapInPlace(table,y,x);
+	size = cuddSwapInPlace(table,y,x,0);
 	if (size == 0) {
 	    return(0);
 	}

@@ -46,6 +46,7 @@
 #include "util.h"
 #include "mtrInt.h"
 #include "cuddInt.h"
+#include "search.h"
 
 /*---------------------------------------------------------------------------*/
 /* Constant declarations                                                     */
@@ -970,6 +971,112 @@ Cudd_ReadTimeoutHandler(
     return unique->timeoutHandler;
 
 } /* end of Cudd_ReadTimeoutHandler */
+
+
+/**
+  @brief Set variable ordering constraint to keep the variable at index
+  upperVarIndex above that at index lowerVarIndex during reordering.
+
+  @details lowerVarIndex gets added to upperVarIndex variable's
+  stayAboveIndices subtable property.
+
+  @return 1 if successful; 0 otherwise (e.g., invalid variable index).
+
+  @sideeffect lowerVarIndex gets added to upperVarIndex variable's
+  stayAboveIndices subtable property.
+
+  @see Cudd_RemoveVarOrderConstraint cuddVarOrderConstraintExists
+  cuddDestroyIndices
+
+*/
+int
+Cudd_SetVarOrderConstraint(
+  DdManager *unique,
+  int upperVarIndex,
+  int lowerVarIndex)
+{
+    if (upperVarIndex >= unique->size || upperVarIndex < 0 ||
+        lowerVarIndex >= unique->size || lowerVarIndex < 0) {
+        unique->errorCode = CUDD_INVALID_ARG;
+        return (0);
+    }
+
+    int *value = malloc(sizeof(*value));
+    if (value == NULL) {
+        unique->errorCode = CUDD_MEMORY_OUT;
+        return (0);
+    }
+
+    *value = lowerVarIndex;
+    int **foundOrInserted = tsearch(
+            value,
+            &unique->subtables[unique->perm[upperVarIndex]].stayAboveIndices,
+            cuddCompareVarIndices);
+    if (foundOrInserted == NULL) {
+        free(value);
+        unique->errorCode = CUDD_MEMORY_OUT;
+        return (0);
+    } else if (*foundOrInserted != value) {
+        free(value);
+    }
+
+    return (1);
+} /* end of Cudd_SetVarOrderConstraint */
+
+
+/**
+  @brief Remove variable ordering constraint to keep the variable at index
+  upperVarIndex above that at index lowerVarIndex during reordering.
+
+  @details lowerVarIndex gets removed from upperVarIndex variable's
+  stayAboveIndices subtable property, if it was present there.
+
+  @return 1 if successful; 0 otherwise (e.g., invalid variable index).
+
+  @sideeffect lowerVarIndex gets removed from upperVarIndex variable's
+  stayAboveIndices subtable property, if it was present there.
+
+  @see Cudd_SetVarOrderConstraint cuddVarOrderConstraintExists
+  cuddDestroyIndices
+
+*/
+int
+Cudd_RemoveVarOrderConstraint(
+  DdManager *unique,
+  int upperVarIndex,
+  int lowerVarIndex)
+{
+    if (upperVarIndex >= unique->size || upperVarIndex < 0 ||
+        lowerVarIndex >= unique->size || lowerVarIndex < 0) {
+        unique->errorCode = CUDD_INVALID_ARG;
+        return (0);
+    }
+
+    /* find tree node to dereference its value later */
+    int **varNode = tfind(
+            &lowerVarIndex,
+            &unique->subtables[unique->perm[upperVarIndex]].stayAboveIndices,
+            cuddCompareVarIndices);
+    if (varNode == NULL) {
+        unique->errorCode = CUDD_INVALID_ARG;
+        return (0);
+    }
+
+    int *nodeValuePointer = *varNode;
+
+    int *deleted = tdelete(
+            &lowerVarIndex,
+            &unique->subtables[unique->perm[upperVarIndex]].stayAboveIndices,
+            cuddCompareVarIndices);
+    if (deleted == NULL) {
+        unique->errorCode = CUDD_INVALID_ARG;
+        return (0);
+    }
+
+    free(nodeValuePointer);
+
+    return (1);
+} /* end of Cudd_RemoveVarOrderConstraint */
 
 
 /**

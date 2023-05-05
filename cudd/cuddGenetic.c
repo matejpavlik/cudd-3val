@@ -497,7 +497,7 @@ sift_up(
 
     y = cuddNextLow(table,x);
     while (y >= x_low) {
-	size = cuddSwapInPlace(table,y,x);
+	size = cuddSwapInPlace(table,y,x,0);
 	if (size == 0) {
 	    return(0);
 	}

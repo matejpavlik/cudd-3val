@@ -46,6 +46,7 @@
 #include "util.h"
 #include "mtrInt.h"
 #include "cuddInt.h"
+#include "search.h"
 
 /*---------------------------------------------------------------------------*/
 /* Constant declarations                                                     */
@@ -436,6 +437,61 @@ cuddDynamicAllocNode(
 
 
 /**
+  @brief Compares two given variable indices for BST operations.
+
+  @return 1 if *pa &gt; *pb; -1 if *pa &lt; *pb; 0 otherwise.
+
+  @sideeffect None
+
+  @see cuddVarOrderConstraintExists Cudd_SetVarOrderConstraint
+  Cudd_RemoveVarOrderConstraint
+
+*/
+int
+cuddCompareVarIndices(
+  const void *pa,
+  const void *pb)
+{
+    if (*(int *) pa < *(int *) pb)
+        return -1;
+    if (*(int *) pa > *(int *) pb)
+        return 1;
+    return 0;
+}
+
+
+/**
+  @brief Returns whether an order constraint to keep variable at index
+  upperVarIndex above that at index lowerVarIndex exists.
+
+  @return 1 if the constraint exists; 0 otherwise.
+
+  @sideeffect None
+
+  @see Cudd_SetVarOrderConstraint Cudd_RemoveVarOrderConstraint
+  cuddDestroyIndices
+
+*/
+int
+cuddVarOrderConstraintExists(
+  DdManager *table,
+  int upperVarIndex,
+  int lowerVarIndex)
+{
+    if (upperVarIndex >= table->size || upperVarIndex < 0 ||
+        lowerVarIndex >= table->size || lowerVarIndex < 0)
+        return (0);
+
+    int **ret = tfind(
+            &lowerVarIndex,
+            &table->subtables[table->perm[upperVarIndex]].stayAboveIndices,
+            cuddCompareVarIndices);
+
+    return ret == NULL ? 0 : 1;
+} /* end of cuddVarOrderConstraintExists */
+
+
+/**
   @brief Implementation of Rudell's sifting algorithm.
 
   @details Assumes that no dead nodes are present.
@@ -709,12 +765,14 @@ int
 cuddSwapInPlace(
   DdManager * table,
   int  x,
-  int  y)
+  int  y,
+  int  checkConstraints)
 {
     DdNodePtr *xlist, *ylist;
     int    xindex, yindex;
     int    xslots, yslots;
     int    xshift, yshift;
+    int    *xStayAboveIndices, *yStayAboveIndices;
     int    oldxkeys, oldykeys;
     int    newxkeys, newykeys;
     int    comple, newcomplement;
@@ -744,21 +802,29 @@ cuddSwapInPlace(
     assert(table->subtables[y].dead == 0);
 #endif
 
+    xindex = table->invperm[x];
+    yindex = table->invperm[y];
+
+    /* x should stay above y, just as it is now - stop the swap */
+    if (checkConstraints && cuddVarOrderConstraintExists(table, xindex, yindex)) {
+        return -1;
+    }
+
     table->ddTotalNumberSwapping++;
 
     /* Get parameters of x subtable. */
-    xindex = table->invperm[x];
     xlist = table->subtables[x].nodelist;
     oldxkeys = table->subtables[x].keys;
     xslots = table->subtables[x].slots;
     xshift = table->subtables[x].shift;
+    xStayAboveIndices = table->subtables[x].stayAboveIndices;
 
     /* Get parameters of y subtable. */
-    yindex = table->invperm[y];
     ylist = table->subtables[y].nodelist;
     oldykeys = table->subtables[y].keys;
     yslots = table->subtables[y].slots;
     yshift = table->subtables[y].shift;
+    yStayAboveIndices = table->subtables[y].stayAboveIndices;
 
     if (!cuddTestInteract(table,xindex,yindex)) {
 #ifdef DD_STATS
@@ -1131,6 +1197,7 @@ cuddSwapInPlace(
     table->subtables[x].shift = yshift;
     table->subtables[x].keys = newykeys;
     table->subtables[x].maxKeys = yslots * DD_MAX_SUBTABLE_DENSITY;
+    table->subtables[x].stayAboveIndices = yStayAboveIndices;
     i = table->subtables[x].bindVar;
     table->subtables[x].bindVar = table->subtables[y].bindVar;
     table->subtables[y].bindVar = i;
@@ -1153,6 +1220,7 @@ cuddSwapInPlace(
     table->subtables[y].shift = xshift;
     table->subtables[y].keys = newxkeys;
     table->subtables[y].maxKeys = xslots * DD_MAX_SUBTABLE_DENSITY;
+    table->subtables[y].stayAboveIndices = xStayAboveIndices;
 
     table->perm[xindex] = y; table->perm[yindex] = x;
     table->invperm[x] = yindex; table->invperm[y] = xindex;
@@ -1318,7 +1386,7 @@ ddSwapAny(
 
     for (;;) {
 	if ( xNext == yNext) {
-	    size = cuddSwapInPlace(table,x,xNext);
+	    size = cuddSwapInPlace(table,x,xNext,0);
 	    if (size == 0) goto ddSwapAnyOutOfMem;
 	    move = (Move *) cuddDynamicAllocNode(table);
 	    if (move == NULL) goto ddSwapAnyOutOfMem;
@@ -1328,7 +1396,7 @@ ddSwapAny(
 	    move->next = moves;
 	    moves = move;
 
-	    size = cuddSwapInPlace(table,yNext,y);
+	    size = cuddSwapInPlace(table,yNext,y,0);
 	    if (size == 0) goto ddSwapAnyOutOfMem;
 	    move = (Move *) cuddDynamicAllocNode(table);
 	    if (move == NULL) goto ddSwapAnyOutOfMem;
@@ -1338,7 +1406,7 @@ ddSwapAny(
 	    move->next = moves;
 	    moves = move;
 
-	    size = cuddSwapInPlace(table,x,xNext);
+	    size = cuddSwapInPlace(table,x,xNext,0);
 	    if (size == 0) goto ddSwapAnyOutOfMem;
 	    move = (Move *) cuddDynamicAllocNode(table);
 	    if (move == NULL) goto ddSwapAnyOutOfMem;
@@ -1352,7 +1420,7 @@ ddSwapAny(
 
 	} else if (x == yNext) {
 
-	    size = cuddSwapInPlace(table,x,xNext);
+	    size = cuddSwapInPlace(table,x,xNext,0);
 	    if (size == 0) goto ddSwapAnyOutOfMem;
 	    move = (Move *) cuddDynamicAllocNode(table);
 	    if (move == NULL) goto ddSwapAnyOutOfMem;
@@ -1365,7 +1433,7 @@ ddSwapAny(
 	    tmp = x; x = y; y = tmp;
 
 	} else {
-	    size = cuddSwapInPlace(table,x,xNext);
+	    size = cuddSwapInPlace(table,x,xNext,0);
 	    if (size == 0) goto ddSwapAnyOutOfMem;
 	    move = (Move *) cuddDynamicAllocNode(table);
 	    if (move == NULL) goto ddSwapAnyOutOfMem;
@@ -1375,7 +1443,7 @@ ddSwapAny(
 	    move->next = moves;
 	    moves = move;
 
-	    size = cuddSwapInPlace(table,yNext,y);
+	    size = cuddSwapInPlace(table,yNext,y,0);
 	    if (size == 0) goto ddSwapAnyOutOfMem;
 	    move = (Move *) cuddDynamicAllocNode(table);
 	    if (move == NULL) goto ddSwapAnyOutOfMem;
@@ -1397,7 +1465,7 @@ ddSwapAny(
 	if (size < limitSize) limitSize = size;
     }
     if (yNext>=xRef) {
-	size = cuddSwapInPlace(table,yNext,y);
+	size = cuddSwapInPlace(table,yNext,y,0);
 	if (size == 0) goto ddSwapAnyOutOfMem;
 	move = (Move *) cuddDynamicAllocNode(table);
 	if (move == NULL) goto ddSwapAnyOutOfMem;
@@ -1595,8 +1663,9 @@ ddSiftingUp(
 	checkL -= (int) table->subtables[y].keys - isolated;
 	assert(L == checkL);
 #endif
-	size = cuddSwapInPlace(table,x,y);
+	size = cuddSwapInPlace(table,x,y,1);
 	if (size == 0) goto ddSiftingUpOutOfMem;
+    if (size == -1) break; /* order constraint hit - stop sifting in this direction */
 	/* Update the lower bound. */
 	if (cuddTestInteract(table,xindex,yindex)) {
 	    isolated = table->vars[xindex]->ref == 1;
@@ -1690,8 +1759,9 @@ ddSiftingDown(
 	    isolated = table->vars[yindex]->ref == 1;
 	    R -= (int) table->subtables[y].keys - isolated;
 	}
-	size = cuddSwapInPlace(table,x,y);
+	size = cuddSwapInPlace(table,x,y,1);
 	if (size == 0) goto ddSiftingDownOutOfMem;
+    if (size == -1) break; /* order constraint hit - stop sifting in this direction */
 	move = (Move *) cuddDynamicAllocNode(table);
 	if (move == NULL) goto ddSiftingDownOutOfMem;
 	move->x = x;
@@ -1746,7 +1816,7 @@ ddSiftingBackward(
 
     for (move = moves; move != NULL; move = move->next) {
 	if (move->size == size) return(1);
-	res = cuddSwapInPlace(table,(int)move->x,(int)move->y);
+	res = cuddSwapInPlace(table,(int)move->x,(int)move->y,0);
 	if (!res) return(0);
     }
 
@@ -1921,7 +1991,7 @@ ddSiftUp(
 
     y = cuddNextLow(table,x);
     while (y >= xLow) {
-	size = cuddSwapInPlace(table,y,x);
+	size = cuddSwapInPlace(table,y,x,0);
 	if (size == 0) {
 	    return(0);
 	}

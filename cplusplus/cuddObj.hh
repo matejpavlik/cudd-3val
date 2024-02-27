@@ -66,6 +66,12 @@ class Cudd;
 
 typedef void (*PFC)(std::string);	// handler function type
 
+enum traverse_heuristic {
+  RANDOM_TRAVERSE,
+  GREEDY_TRAVERSE_ONE_STEP,
+  GREEDY_TRAVERSE_TWO_STEP,
+};
+
 /*---------------------------------------------------------------------------*/
 /* Class definitions                                                         */
 /*---------------------------------------------------------------------------*/
@@ -160,6 +166,8 @@ public:
 */
 class BDD : public ABDD {
     friend class Cudd;
+private:
+    DD_TRAV_HEU GetHeuristic(traverse_heuristic h) const;
 public:
     BDD();
     BDD(Capsule *cap, DdNode *bddNode);
@@ -234,7 +242,15 @@ public:
     BDD NorP(const BDD& g) const;
     BDD XorP(const BDD& g) const;
     BDD XnorP(const BDD& g) const;
+    BDD IteLim(const BDD& g, const BDD& i, traverse_heuristic h, unsigned int limit) const;
+    BDD AndLim(const BDD& g, traverse_heuristic h, unsigned int limit) const;
+    BDD OrLim(const BDD& g, traverse_heuristic h, unsigned int limit) const;
+    BDD NandLim(const BDD& g, traverse_heuristic h, unsigned int limit) const;
+    BDD NorLim(const BDD& g, traverse_heuristic h, unsigned int limit) const;
+    BDD XorLim(const BDD& g, traverse_heuristic h, unsigned int limit) const;
+    BDD XnorLim(const BDD& g, traverse_heuristic h, unsigned int limit) const;
     BDD ReduceByVal(const BDD& val) const;
+    BDD ReduceByNodeLimit(traverse_heuristic h, unsigned int limit) const;
     bool Leq(const BDD& g) const;
     ADD Add() const;
     BDD Transfer(Cudd& destination) const;

@@ -269,6 +269,10 @@ typedef int (*DD_THFP)(const void *);
    @brief Type of timeout handler.
 */
 typedef void (*DD_TOHFP)(DdManager *, void *);
+/**
+   @brief Traverse heuristic.
+*/
+typedef int (*DD_TRAV_HEU)(DdManager *, DdNode *, DdNode *, DdNode *);
 
 /*---------------------------------------------------------------------------*/
 /* Variable declarations                                                     */
@@ -981,6 +985,14 @@ extern DdNode * Cudd_BddForgetZeros(DdManager *dd, DdNode *f);
 extern DdNode * Cudd_BddForgetOnes(DdManager *dd, DdNode *f);
 extern DdNode * Cudd_BddMergeInterval(DdManager *dd, DdNode *under, DdNode *over);
 extern DdNode * Cudd_BddReduceByValuation(DdManager *dd, DdNode *bdd, DdNode *val);
+extern DdNode * Cudd_BddReduceByNodeLimit(DdManager *dd, DdNode *f, DD_TRAV_HEU h, unsigned int limit);
+extern DdNode * Cudd_bddIteReduced(DdManager *dd, DdNode *f, DdNode *g, DdNode *i, DD_TRAV_HEU h, unsigned int limit);
+extern DdNode * Cudd_bddAndReduced(DdManager *dd, DdNode *f, DdNode *g, DD_TRAV_HEU h, unsigned int limit);
+extern DdNode * Cudd_bddOrReduced(DdManager *dd, DdNode *f, DdNode *g, DD_TRAV_HEU h, unsigned int limit);
+extern DdNode * Cudd_bddNandReduced(DdManager *dd, DdNode *f, DdNode *g, DD_TRAV_HEU h, unsigned int limit);
+extern DdNode * Cudd_bddNorReduced(DdManager *dd, DdNode *f, DdNode *g, DD_TRAV_HEU h, unsigned int limit);
+extern DdNode * Cudd_bddXorReduced(DdManager *dd, DdNode *f, DdNode *g, DD_TRAV_HEU h, unsigned int limit);
+extern DdNode * Cudd_bddXnorReduced(DdManager *dd, DdNode *f, DdNode *g, DD_TRAV_HEU h, unsigned int limit);
 #ifdef MTR_H_
 extern MtrNode * Cudd_ReadTree(DdManager *dd);
 extern void Cudd_SetTree(DdManager *dd, MtrNode *tree);

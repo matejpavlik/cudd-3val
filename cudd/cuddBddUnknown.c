@@ -12,6 +12,7 @@
 #include <assert.h>
 
 static void clearMaxrefFlagRecur(DdNode *f);
+static void countNodeScore(DdManager *dd, DdNode *f, unsigned int *con, unsigned int *score);
 
 /**
   @brief The valuations leading to 0 lead to 'unknown' in the resulting diagram.
@@ -183,4 +184,187 @@ static void clearMaxrefFlagRecur(DdNode *f) {
   clearMaxrefFlagRecur(cuddT(F));
   clearMaxrefFlagRecur(cuddE(F));
 }
+
+
+int randomTraverse(DdManager *dd, DdNode *f, DdNode *g, DdNode *h)
+{
+  UNUSED(f);
+  UNUSED(g);
+  UNUSED(h);
+  return (Cudd_Random(dd) % 2) ? -1 : 1;
+}
+
+
+#define DD_GET_NODE_INDEX(x) (((x) == unknown) ? INT_MAX : dd->perm[(x)->index])
+
+
+/**
+  @brief Chooses next step in a tree traversal. At least one of the nodes must be
+  non-constant.
+
+  @return negative number if then-branch is chosen; non-negative number if
+  else-branch is chosen
+
+  @sideeffect None
+
+*/
+int greedyTraverseOneStep(DdManager *dd, DdNode *f, DdNode *g, DdNode *h)
+{
+  DdNode *unknown = DD_UNKNOWN(dd);
+  DdNode *F = Cudd_Regular(f), *G, *H;
+  unsigned int index, tscore = 0, escore = 0, tconst = 0, econst = 0, findex, gindex = 0, hindex = 0;
+  DdNode *t, *e;
+  
+  findex = DD_GET_NODE_INDEX(F);
+  index = findex;
+  
+  if (g != NULL) {
+    G = Cudd_Regular(g);
+    gindex = DD_GET_NODE_INDEX(G);
+    index = ddMin(index, gindex);
+  }
+  
+  if (h != NULL) {
+    H = Cudd_Regular(h);
+    hindex = DD_GET_NODE_INDEX(H);
+    index = ddMin(index, hindex);
+  }
+  
+  if (findex == index) {
+    t = cuddT(F), e = Cudd_Regular(cuddE(F));
+    
+    if (Cudd_IsConstant(t)) tconst += 1;
+    else                    tscore += dd->perm[t->index];
+    
+    if (Cudd_IsConstant(e)) econst += 1;
+    else                    escore += dd->perm[e->index];
+  }
+  
+  if (g != NULL && gindex == index) {
+    t = cuddT(G), e = Cudd_Regular(cuddE(G));
+    
+    if (Cudd_IsConstant(t)) tconst += 1;
+    else                    tscore += dd->perm[t->index];
+    
+    if (Cudd_IsConstant(e)) econst += 1;
+    else                    escore += dd->perm[e->index];
+  }
+  
+  
+  if (h != NULL && hindex == index) {
+    t = cuddT(H), e = Cudd_Regular(cuddE(H));
+    
+    if (Cudd_IsConstant(t)) tconst += 1;
+    else                    tscore += dd->perm[t->index];
+    
+    if (Cudd_IsConstant(e)) econst += 1;
+    else                    escore += dd->perm[e->index];
+  }
+
+  return (tconst > econst || (tconst == econst && tscore > escore)) ? -1
+       : (tconst < econst || (tconst == econst && tscore < escore)) ? 1
+       : (Cudd_Random(dd) % 2) ? -1 : 1;
+}
+
+
+static void countNodeScore(DdManager *dd, DdNode *f, unsigned int *con, unsigned int *score)
+{
+  /*f = Cudd_Regular(f);
+  if (f == DD_ONE(dd))          *con += 1;
+  else if (!Cudd_IsConstant(f)) *score += dd->perm[f->index];*/
+  
+  
+  f = Cudd_Regular(f);
+  if (Cudd_IsConstant(f)) *con += 1;
+  else                    *score += dd->perm[f->index];
+}
+
+
+/**
+  @brief Chooses next step in a tree traversal. At least one of the nodes must be
+  non-constant.
+
+  @return negative number if then-branch is chosen; non-negative number if
+  else-branch is chosen
+
+  @sideeffect None
+
+*/
+int greedyTraverseTwoStep(DdManager *dd, DdNode *f, DdNode *g, DdNode *h)
+{
+  DdNode *unknown = DD_UNKNOWN(dd);
+  DdNode *F = Cudd_Regular(f), *G, *H;
+  unsigned int index, tscore = 0, escore = 0, tconst = 0, econst = 0, findex, gindex = 0, hindex = 0;
+  DdNode *t, *e;
+  
+  findex = DD_GET_NODE_INDEX(F);
+  index = findex;
+  
+  if (g != NULL) {
+    G = Cudd_Regular(g);
+    gindex = DD_GET_NODE_INDEX(G);
+    index = ddMin(index, gindex);
+  }
+  
+  if (h != NULL) {
+    H = Cudd_Regular(h);
+    hindex = DD_GET_NODE_INDEX(H);
+    index = ddMin(index, hindex);
+  }
+  
+  if (findex == index) {
+    t = cuddT(F), e = Cudd_Regular(cuddE(F));
+    
+    if (Cudd_IsConstant(t)) tconst += 8;
+    else {
+      countNodeScore(dd, cuddT(t), &tconst, &tscore);
+      countNodeScore(dd, cuddE(t), &tconst, &tscore);
+    }
+    
+    if (Cudd_IsConstant(e)) econst += 8;
+    else {
+      countNodeScore(dd, cuddT(e), &econst, &escore);
+      countNodeScore(dd, cuddE(e), &econst, &escore);
+    }
+  }
+  
+  if (g != NULL && gindex == index) {
+    t = cuddT(G), e = Cudd_Regular(cuddE(G));
+    
+    if (Cudd_IsConstant(t)) tconst += 8;
+    else {
+      countNodeScore(dd, cuddT(t), &tconst, &tscore);
+      countNodeScore(dd, cuddE(t), &tconst, &tscore);
+    }
+    
+    if (Cudd_IsConstant(e)) econst += 8;
+    else {
+      countNodeScore(dd, cuddT(e), &econst, &escore);
+      countNodeScore(dd, cuddE(e), &econst, &escore);
+    }
+  }
+  
+  
+  if (h != NULL && hindex == index) {
+    t = cuddT(H), e = Cudd_Regular(cuddE(H));
+    
+    if (Cudd_IsConstant(t)) tconst += 8;
+    else {
+      countNodeScore(dd, cuddT(t), &tconst, &tscore);
+      countNodeScore(dd, cuddE(t), &tconst, &tscore);
+    }
+    
+    if (Cudd_IsConstant(e)) econst += 8;
+    else {
+      countNodeScore(dd, cuddT(e), &econst, &escore);
+      countNodeScore(dd, cuddE(e), &econst, &escore);
+    }
+  }
+
+  return (tconst > econst || (tconst == econst && tscore > escore)) ? -1
+       : (tconst < econst || (tconst == econst && tscore < escore)) ? 1
+       : (Cudd_Random(dd) % 2) ? -1 : 1;
+}
+
+
 

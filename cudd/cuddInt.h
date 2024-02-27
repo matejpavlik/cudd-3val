@@ -1103,6 +1103,7 @@ extern DdNode * cuddBddXorRecur(DdManager *manager, DdNode *f, DdNode *g);
 extern DdNode * cuddPreciseBddIteRecur(DdManager *dd, DdNode *f, DdNode *g, DdNode *h);
 extern DdNode * cuddPreciseBddAndRecur(DdManager *manager, DdNode *f, DdNode *g);
 extern DdNode * cuddPreciseBddXorRecur(DdManager *manager, DdNode *f, DdNode *g);
+extern DdNode * cuddBddReduceByNodeLimitRecur(DdManager *dd, DdNode *f, DD_TRAV_HEU h, unsigned int limit, unsigned int *nodesConsumed, unsigned int *resultReduced);
 extern int randomTraverse(DdManager *dd, DdNode *f, DdNode *g, DdNode *h);
 extern int greedyTraverseOneStep(DdManager *dd, DdNode *f, DdNode *g, DdNode *h);
 extern int greedyTraverseTwoStep(DdManager *dd, DdNode *f, DdNode *g, DdNode *h);

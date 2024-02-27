@@ -175,6 +175,20 @@ Cudd_BddReduceByValuation(
 }
 
 
+DdNode *
+Cudd_BddReduceByNodeLimit(
+  DdManager *dd,
+  DdNode *f,
+  DD_TRAV_HEU h,
+  unsigned int limit)
+{
+    unsigned int consumed = 0, reduced = 0;
+    DdNode *res = cuddBddReduceByNodeLimitRecur(dd, f, h, limit, &consumed, &reduced);
+    clearMaxrefFlagRecur(res);
+    return(res);
+}
+
+
 static void clearMaxrefFlagRecur(DdNode *f) {
   DdNode *F = Cudd_Regular(f);
   if (F == NULL || Cudd_IsConstant(F) || !DD_MAXREF_IS_FLAG_SET(F->ref)) {
@@ -366,5 +380,111 @@ int greedyTraverseTwoStep(DdManager *dd, DdNode *f, DdNode *g, DdNode *h)
        : (Cudd_Random(dd) % 2) ? -1 : 1;
 }
 
+
+DdNode *
+cuddBddReduceByNodeLimitRecur(
+  DdManager *dd,
+  DdNode *f,
+  DD_TRAV_HEU h,
+  unsigned int limit,
+  unsigned int * nodesConsumed,
+  unsigned int * resultReduced)
+{
+  DdNode *one = DD_ONE(dd);
+  DdNode *zero = Cudd_Not(one);
+  DdNode *unknown = DD_UNKNOWN(dd);
+  DdNode *F, *t, *e, *bt, *be, *r;
+  
+  if (f == one || f == zero || f == unknown) {
+    return(f);
+  }
+
+  /* bdd is not constant now */
+  
+  F = Cudd_Regular(f);
+  
+  /* Check if the node is already included in the DD. */
+  if (DD_MAXREF_IS_FLAG_SET(F->ref)) { 
+    return(f);
+  }
+  
+  if (limit <= 0) {
+    *resultReduced = 1;
+    return(unknown);
+  }
+  
+  bt = Cudd_NotCond(cuddT(F), F != f && cuddT(F) != unknown);
+  be = Cudd_NotCond(cuddE(F), F != f && cuddE(F) != unknown);
+    
+  int decision = h(dd, f, NULL, NULL);
+  unsigned int consumed = 0;
+  unsigned int reduced = 0;
+  
+  if (decision < 0) { // then branch first
+    t = cuddBddReduceByNodeLimitRecur(dd, bt, h, limit - 1, &consumed, &reduced);
+    if (t == NULL) { return (NULL); }
+    cuddRef(t);
+    *nodesConsumed += consumed;
+    
+    consumed = 0;
+    e = cuddBddReduceByNodeLimitRecur(dd, be, h, limit - 1 - *nodesConsumed, &consumed, &reduced);
+    if (e == NULL) {
+      Cudd_IterDerefBdd(dd, t);
+      return (NULL);
+    }
+    cuddRef(e);
+    *nodesConsumed += consumed;
+    *resultReduced |= reduced;
+  } else { // else branch first
+    consumed = 0;
+    e = cuddBddReduceByNodeLimitRecur(dd, be, h, limit - 1, &consumed, &reduced);
+    if (e == NULL) { return (NULL); }
+    cuddRef(e);
+    *nodesConsumed += consumed;
+    
+    consumed = 0;
+    t = cuddBddReduceByNodeLimitRecur(dd, bt, h, limit - 1 - *nodesConsumed, &consumed, &reduced);
+    if (t == NULL) {
+      Cudd_IterDerefBdd(dd, e);
+      return (NULL);
+    }
+    cuddRef(t);
+    *nodesConsumed += consumed;
+    *resultReduced |= reduced;
+  }
+
+  if (t == e) {
+    r = t;
+  } else {
+    int complementRes = 0;
+    if (Cudd_IsComplement(t)) {
+      r = cuddUniqueInter(dd, (int) F->index, Cudd_Not(t), Cudd_NotCond(e, e != unknown));
+      complementRes = 1;
+    } else  if (t == unknown && Cudd_IsComplement(e)) { /* Maintain canonical form. */
+      r = cuddUniqueInter(dd, (int) F->index, t, Cudd_Not(e));
+      complementRes = 1;
+    } else {
+      r = cuddUniqueInter(dd, (int) F->index, t, e);
+    }
+    if (r == NULL) {
+      Cudd_IterDerefBdd(dd, t);
+      Cudd_IterDerefBdd(dd, e);
+      return (NULL);
+    }
+    
+    if (!DD_MAXREF_IS_FLAG_SET(r->ref)) {
+      DD_MAXREF_SET_FLAG(r->ref);
+      *nodesConsumed += 1;
+    }
+    
+    if (complementRes) {
+      r = Cudd_Not(r);
+    }
+  }
+  
+  cuddDeref(e);
+  cuddDeref(t);
+  return (r);
+} /* end of cuddBddReduceByNodeLimitRecur */
 
 

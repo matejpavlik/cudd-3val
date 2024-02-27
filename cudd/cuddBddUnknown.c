@@ -11,6 +11,8 @@
 #include "cuddInt.h"
 #include <assert.h>
 
+static void clearMaxrefFlagRecur(DdNode *f);
+
 /**
   @brief The valuations leading to 0 lead to 'unknown' in the resulting diagram.
 
@@ -170,3 +172,15 @@ Cudd_BddReduceByValuation(
 
   return(r);
 }
+
+
+static void clearMaxrefFlagRecur(DdNode *f) {
+  DdNode *F = Cudd_Regular(f);
+  if (F == NULL || Cudd_IsConstant(F) || !DD_MAXREF_IS_FLAG_SET(F->ref)) {
+    return;
+  }
+  DD_MAXREF_CLEAR_FLAG(F->ref);
+  clearMaxrefFlagRecur(cuddT(F));
+  clearMaxrefFlagRecur(cuddE(F));
+}
+

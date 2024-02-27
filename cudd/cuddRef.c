@@ -136,9 +136,10 @@ Cudd_RecursiveDeref(
     do {
 #ifdef DD_DEBUG
 	assert(N->ref != 0);
+	assert(N->ref != DD_MAXREF_FLAG_MASK);
 #endif
 
-	if (N->ref == 1) {
+	if (N->ref == 1 || N->ref == (1 | DD_MAXREF_FLAG_MASK)) {
 	    N->ref = 0;
 	    table->dead++;
 #ifdef DD_STATS
@@ -197,9 +198,10 @@ Cudd_IterDerefBdd(
     do {
 #ifdef DD_DEBUG
 	assert(N->ref != 0);
+	assert(N->ref != DD_MAXREF_FLAG_MASK);
 #endif
 
-	if (N->ref == 1) {
+	if (N->ref == 1 || N->ref == (1 | DD_MAXREF_FLAG_MASK)) {
 	    N->ref = 0;
 	    table->dead++;
 #ifdef DD_STATS
@@ -251,6 +253,7 @@ Cudd_DelayedDerefBdd(
     n = Cudd_Regular(n);
 #ifdef DD_DEBUG
     assert(n->ref != 0);
+    assert(n->ref != DD_MAXREF_FLAG_MASK);
 #endif
 
 #ifdef DD_NO_DEATH_ROW
@@ -276,9 +279,10 @@ Cudd_DelayedDerefBdd(
 	do {
 #ifdef DD_DEBUG
 	    assert(N->ref != 0);
+	    assert(n->ref != DD_MAXREF_FLAG_MASK);
 #endif
-	    if (N->ref == 1) {
-		N->ref = 0;
+	    if (N->ref == 1 || N->ref == (1 | DD_MAXREF_FLAG_MASK)) {
+		N->ref -= 1;
 		table->dead++;
 #ifdef DD_STATS
 		table->nodesDropped++;
@@ -507,7 +511,8 @@ Cudd_CheckZeroRef(
 		    }
 		} else if (node == manager->zero ||
 		node == manager->plusinfinity ||
-		node == manager->minusinfinity) {
+		node == manager->minusinfinity ||
+		node == manager->unknown) {
 		    if (node->ref != 1) {
 			count++;
 		    }
@@ -550,7 +555,7 @@ cuddReclaim(
     N = Cudd_Regular(n);
 
 #ifdef DD_DEBUG
-    assert(N->ref == 0);
+    assert(N->ref == 0 || N->ref == DD_MAXREF_FLAG_MASK);
 #endif
 
     do {

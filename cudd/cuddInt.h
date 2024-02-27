@@ -65,7 +65,7 @@
 
 #define CUDD_VERSION		PACKAGE_VERSION
 
-#define DD_MAXREF		((DdHalfWord) ~0)
+#define DD_MAXREF		(((DdHalfWord) ~0) >> 1)
 
 #define DD_DEFAULT_RESIZE	10	/* how many extra variables */
 					/* should be added when resizing */
@@ -175,11 +175,7 @@
  ** 64-bit machines one can cast an index to (int) without generating
  ** a negative number.
  */
-#if SIZEOF_VOID_P == 8 && SIZEOF_INT == 4
 #define CUDD_MAXINDEX		(((DdHalfWord) ~0) >> 1)
-#else
-#define CUDD_MAXINDEX		((DdHalfWord) ~0)
-#endif
 
 /**
  ** @brief The index of constant nodes.
@@ -895,6 +891,14 @@ struct DdLevelQueue {
 */
 #define ddEqualVal(x,y,e) (ddAbs((x)-(y))<(e))
 
+/**
+  Macros for ref count flags.
+*/
+#define DD_MAXREF_FLAG_MASK      (~(~((DdHalfWord) 0) >> 1))
+#define DD_MAXREF_FLAG_ON        ((DdHalfWord) DD_MAXREF | DD_MAXREF_FLAG_MASK)
+#define DD_MAXREF_SET_FLAG(x)    (x) = (DD_MAXREF_FLAG_MASK | (x))
+#define DD_MAXREF_CLEAR_FLAG(x)  (x) = (~DD_MAXREF_FLAG_MASK & (x))
+#define DD_MAXREF_IS_FLAG_SET(x) (DD_MAXREF_FLAG_MASK & (x))
 
 /**
   @brief Saturating increment operator.
@@ -910,7 +914,7 @@ struct DdLevelQueue {
 #if SIZEOF_VOID_P == 8 && SIZEOF_INT == 4
 #define cuddSatInc(x) ((x)++)
 #else
-#define cuddSatInc(x) ((x) += (x) != (DdHalfWord)DD_MAXREF)
+#define cuddSatInc(x) ((x) += ((x) != (DdHalfWord)DD_MAXREF && (x) != (DdHalfWord)DD_MAXREF_FLAG_ON))
 #endif
 
 
@@ -928,7 +932,7 @@ struct DdLevelQueue {
 #if SIZEOF_VOID_P == 8 && SIZEOF_INT == 4
 #define cuddSatDec(x) ((x)--)
 #else
-#define cuddSatDec(x) ((x) -= (x) != (DdHalfWord)DD_MAXREF)
+#define cuddSatDec(x) ((x) -= ((x) != (DdHalfWord)DD_MAXREF && (x) != (DdHalfWord)DD_MAXREF_FLAG_ON))
 #endif
 
 

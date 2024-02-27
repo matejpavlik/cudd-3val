@@ -614,6 +614,8 @@ struct DdLevelQueue {
 /* Macro declarations                                                        */
 /*---------------------------------------------------------------------------*/
 
+#define UNUSED(x) (void)(x)
+
 /**
   @brief Adds node to the head of the free list.
 

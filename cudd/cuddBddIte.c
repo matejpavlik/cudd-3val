@@ -80,7 +80,6 @@
 
 static void bddVarToConst (DdNode *f, DdNode **gp, DdNode **hp, DdNode *one);
 static int bddVarToCanonical (DdManager *dd, DdNode **fp, DdNode **gp, DdNode **hp, int *topfp, int *topgp, int *tophp);
-static int bddVarToCanonicalSimple (DdManager *dd, DdNode **fp, DdNode **gp, DdNode **hp, int *topfp, int *topgp, int *tophp);
 
 /** \endcond */
 
@@ -2072,7 +2071,7 @@ bddVarToCanonical(
   @see bddVarToConst bddVarToCanonical
 
 */
-static int
+int
 bddVarToCanonicalSimple(
   DdManager * dd,
   DdNode ** fp,

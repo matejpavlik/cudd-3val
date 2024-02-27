@@ -65,7 +65,7 @@
 
 #define CUDD_VERSION		PACKAGE_VERSION
 
-#define DD_MAXREF		((DdHalfWord) ~0)
+#define DD_MAXREF		(((DdHalfWord) ~0) >> 1)
 
 #define DD_DEFAULT_RESIZE	10	/* how many extra variables */
 					/* should be added when resizing */
@@ -175,11 +175,7 @@
  ** 64-bit machines one can cast an index to (int) without generating
  ** a negative number.
  */
-#if SIZEOF_VOID_P == 8 && SIZEOF_INT == 4
 #define CUDD_MAXINDEX		(((DdHalfWord) ~0) >> 1)
-#else
-#define CUDD_MAXINDEX		((DdHalfWord) ~0)
-#endif
 
 /**
  ** @brief The index of constant nodes.
@@ -618,6 +614,8 @@ struct DdLevelQueue {
 /* Macro declarations                                                        */
 /*---------------------------------------------------------------------------*/
 
+#define UNUSED(x) (void)(x)
+
 /**
   @brief Adds node to the head of the free list.
 
@@ -895,6 +893,14 @@ struct DdLevelQueue {
 */
 #define ddEqualVal(x,y,e) (ddAbs((x)-(y))<(e))
 
+/**
+  Macros for ref count flags.
+*/
+#define DD_MAXREF_FLAG_MASK      (~(~((DdHalfWord) 0) >> 1))
+#define DD_MAXREF_FLAG_ON        ((DdHalfWord) DD_MAXREF | DD_MAXREF_FLAG_MASK)
+#define DD_MAXREF_SET_FLAG(x)    (x) = (DD_MAXREF_FLAG_MASK | (x))
+#define DD_MAXREF_CLEAR_FLAG(x)  (x) = (~DD_MAXREF_FLAG_MASK & (x))
+#define DD_MAXREF_IS_FLAG_SET(x) (DD_MAXREF_FLAG_MASK & (x))
 
 /**
   @brief Saturating increment operator.
@@ -910,7 +916,7 @@ struct DdLevelQueue {
 #if SIZEOF_VOID_P == 8 && SIZEOF_INT == 4
 #define cuddSatInc(x) ((x)++)
 #else
-#define cuddSatInc(x) ((x) += (x) != (DdHalfWord)DD_MAXREF)
+#define cuddSatInc(x) ((x) += ((x) != (DdHalfWord)DD_MAXREF && (x) != (DdHalfWord)DD_MAXREF_FLAG_ON))
 #endif
 
 
@@ -928,7 +934,7 @@ struct DdLevelQueue {
 #if SIZEOF_VOID_P == 8 && SIZEOF_INT == 4
 #define cuddSatDec(x) ((x)--)
 #else
-#define cuddSatDec(x) ((x) -= (x) != (DdHalfWord)DD_MAXREF)
+#define cuddSatDec(x) ((x) -= ((x) != (DdHalfWord)DD_MAXREF && (x) != (DdHalfWord)DD_MAXREF_FLAG_ON))
 #endif
 
 
@@ -1097,6 +1103,14 @@ extern DdNode * cuddBddXorRecur(DdManager *manager, DdNode *f, DdNode *g);
 extern DdNode * cuddPreciseBddIteRecur(DdManager *dd, DdNode *f, DdNode *g, DdNode *h);
 extern DdNode * cuddPreciseBddAndRecur(DdManager *manager, DdNode *f, DdNode *g);
 extern DdNode * cuddPreciseBddXorRecur(DdManager *manager, DdNode *f, DdNode *g);
+extern DdNode * cuddBddIteReducedRecur(DdManager *manager, DdNode *f, DdNode *g, DdNode *h, DD_TRAV_HEU heu, unsigned int nodeLimit, unsigned int *nodesConsumed, unsigned int *resultReduced);
+extern DdNode * cuddBddAndReducedRecur(DdManager *manager, DdNode *f, DdNode *g, DD_TRAV_HEU heu, unsigned int nodeLimit, unsigned int *nodesConsumed, unsigned int *resultReduced);
+extern DdNode * cuddBddXorReducedRecur(DdManager *manager, DdNode *f, DdNode *g, DD_TRAV_HEU heu, unsigned int nodeLimit, unsigned int *nodesConsumed, unsigned int *resultReduced);
+extern DdNode * cuddBddReduceByNodeLimitRecur(DdManager *dd, DdNode *f, DD_TRAV_HEU h, unsigned int limit, unsigned int *nodesConsumed, unsigned int *resultReduced);
+extern int randomTraverse(DdManager *dd, DdNode *f, DdNode *g, DdNode *h);
+extern int greedyTraverseOneStep(DdManager *dd, DdNode *f, DdNode *g, DdNode *h);
+extern int greedyTraverseTwoStep(DdManager *dd, DdNode *f, DdNode *g, DdNode *h);
+extern int bddVarToCanonicalSimple(DdManager * dd, DdNode ** fp, DdNode ** gp, DdNode ** hp, int * topfp, int * topgp, int * tophp);
 extern DdNode * cuddBddTransfer(DdManager *ddS, DdManager *ddD, DdNode *f);
 extern DdNode * cuddAddBddDoPattern(DdManager *dd, DdNode *f);
 extern int cuddInitCache(DdManager *unique, unsigned int cacheSize, unsigned int maxCacheSize);

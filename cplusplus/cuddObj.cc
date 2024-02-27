@@ -419,6 +419,28 @@ ABDD::summary(
 // Members of class BDD
 // ---------------------------------------------------------------------------
 
+DD_TRAV_HEU
+BDD::GetHeuristic(traverse_heuristic h) const
+{
+    DD_TRAV_HEU heu;
+    
+    switch (h) {
+    case RANDOM_TRAVERSE:
+        heu = randomTraverse;
+        break;
+    case GREEDY_TRAVERSE_ONE_STEP:
+        heu = greedyTraverseOneStep;
+        break;
+    case GREEDY_TRAVERSE_TWO_STEP:
+        heu = greedyTraverseTwoStep;
+        break;
+    default:
+        throw std::invalid_argument("unknown heuristic");
+    }
+    
+    return heu;
+}
+
 BDD::BDD() : ABDD() {}
 BDD::BDD(Capsule *cap, DdNode *bddNode) : ABDD(cap,bddNode) {
 #ifdef DD_DEBUG
@@ -3701,6 +3723,106 @@ BDD::XnorP(
 
 
 BDD
+BDD::IteLim(
+  const BDD& g,
+  const BDD& i,
+  traverse_heuristic h,
+  unsigned int limit) const
+{
+    DD_TRAV_HEU heu = GetHeuristic(h);   
+    DdManager *mgr = checkSameManager(g);
+    checkSameManager(i);
+    DdNode *result = Cudd_bddIteReduced(mgr, node, g.node, i.node, heu, limit);
+    checkReturnValue(result);
+    return BDD(p, result);
+} // BDD::IteLim
+
+
+BDD
+BDD::AndLim(
+  const BDD& g,
+  traverse_heuristic h,
+  unsigned int limit) const
+{
+    DD_TRAV_HEU heu = GetHeuristic(h);   
+    DdManager *mgr = checkSameManager(g);
+    DdNode *result = Cudd_bddAndReduced(mgr, node, g.node, heu, limit);
+    checkReturnValue(result);
+    return BDD(p, result);
+} // BDD::AndLim
+
+
+BDD
+BDD::OrLim(
+  const BDD& g,
+  traverse_heuristic h,
+  unsigned int limit) const
+{
+    DD_TRAV_HEU heu = GetHeuristic(h);   
+    DdManager *mgr = checkSameManager(g);
+    DdNode *result = Cudd_bddOrReduced(mgr, node, g.node, heu, limit);
+    checkReturnValue(result);
+    return BDD(p, result);
+} // BDD::OrLim
+
+
+BDD
+BDD::NandLim(
+  const BDD& g,
+  traverse_heuristic h,
+  unsigned int limit) const
+{
+    DD_TRAV_HEU heu = GetHeuristic(h);   
+    DdManager *mgr = checkSameManager(g);
+    DdNode *result = Cudd_bddNandReduced(mgr, node, g.node, heu, limit);
+    checkReturnValue(result);
+    return BDD(p, result);
+} // BDD::NandLim
+
+
+BDD
+BDD::NorLim(
+  const BDD& g,
+  traverse_heuristic h,
+  unsigned int limit) const
+{
+    DD_TRAV_HEU heu = GetHeuristic(h);   
+    DdManager *mgr = checkSameManager(g);
+    DdNode *result = Cudd_bddNorReduced(mgr, node, g.node, heu, limit);
+    checkReturnValue(result);
+    return BDD(p, result);
+} // BDD::NorLim
+
+
+BDD
+BDD::XorLim(
+  const BDD& g,
+  traverse_heuristic h,
+  unsigned int limit) const
+{
+    DD_TRAV_HEU heu = GetHeuristic(h);   
+    DdManager *mgr = checkSameManager(g);
+    DdNode *result = Cudd_bddXorReduced(mgr, node, g.node, heu, limit);
+    checkReturnValue(result);
+    return BDD(p, result);
+} // BDD::XorLim
+
+
+BDD
+BDD::XnorLim(
+  const BDD& g,
+  traverse_heuristic h,
+  unsigned int limit) const
+{
+    DD_TRAV_HEU heu = GetHeuristic(h);   
+    DdManager *mgr = checkSameManager(g);
+    DdNode *result = Cudd_bddXnorReduced(mgr, node, g.node, heu, limit);
+    checkReturnValue(result);
+    return BDD(p, result);
+} // BDD::XnorLim
+
+
+BDD
 BDD::ReduceByVal(
   const BDD& val) const
 {
@@ -3710,6 +3832,19 @@ BDD::ReduceByVal(
     return BDD(p, result);
 
 } // BDD::ReduceByVal
+
+
+BDD
+BDD::ReduceByNodeLimit(
+  traverse_heuristic h,
+  unsigned int limit) const
+{
+    DD_TRAV_HEU heu = GetHeuristic(h);    
+    DdNode *result = Cudd_BddReduceByNodeLimit(p->manager, node, heu, limit);
+    checkReturnValue(result);
+    return BDD(p, result);
+    
+} // BDD::ReduceByNodeLimit
 
 
 bool

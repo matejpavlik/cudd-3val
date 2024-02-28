@@ -332,7 +332,7 @@ ddExchange(
 
     for (;;) {
 	if (x_next == y_next) {
-	    size = cuddSwapInPlace(table,x,x_next);
+	    size = cuddSwapInPlace(table,x,x_next,0);
 	    if (size == 0) goto ddExchangeOutOfMem;
 	    move = (Move *)cuddDynamicAllocNode(table);
 	    if (move == NULL) goto ddExchangeOutOfMem;
@@ -341,7 +341,7 @@ ddExchange(
 	    move->size = size;
 	    move->next = moves;
 	    moves = move;
-	    size = cuddSwapInPlace(table,y_next,y);
+	    size = cuddSwapInPlace(table,y_next,y,0);
 	    if (size == 0) goto ddExchangeOutOfMem;
 	    move = (Move *)cuddDynamicAllocNode(table);
 	    if (move == NULL) goto ddExchangeOutOfMem;
@@ -350,7 +350,7 @@ ddExchange(
 	    move->size = size;
 	    move->next = moves;
 	    moves = move;
-	    size = cuddSwapInPlace(table,x,x_next);
+	    size = cuddSwapInPlace(table,x,x_next,0);
 	    if (size == 0) goto ddExchangeOutOfMem;
 	    move = (Move *)cuddDynamicAllocNode(table);
 	    if (move == NULL) goto ddExchangeOutOfMem;
@@ -364,7 +364,7 @@ ddExchange(
 	    x = y;
 	    y = tmp;
 	} else if (x == y_next) {
-	    size = cuddSwapInPlace(table,x,x_next);
+	    size = cuddSwapInPlace(table,x,x_next,0);
 	    if (size == 0) goto ddExchangeOutOfMem;
 	    move = (Move *)cuddDynamicAllocNode(table);
 	    if (move == NULL) goto ddExchangeOutOfMem;
@@ -377,7 +377,7 @@ ddExchange(
 	    x = y;
 	    y = tmp;
 	} else {
-	    size = cuddSwapInPlace(table,x,x_next);
+	    size = cuddSwapInPlace(table,x,x_next,0);
 	    if (size == 0) goto ddExchangeOutOfMem;
 	    move = (Move *)cuddDynamicAllocNode(table);
 	    if (move == NULL) goto ddExchangeOutOfMem;
@@ -386,7 +386,7 @@ ddExchange(
 	    move->size = size;
 	    move->next = moves;
 	    moves = move;
-	    size = cuddSwapInPlace(table,y_next,y);
+	    size = cuddSwapInPlace(table,y_next,y,0);
 	    if (size == 0) goto ddExchangeOutOfMem;
 	    move = (Move *)cuddDynamicAllocNode(table);
 	    if (move == NULL) goto ddExchangeOutOfMem;
@@ -411,7 +411,7 @@ ddExchange(
     }
 
     if (y_next>=x_ref) {
-        size = cuddSwapInPlace(table,y_next,y);
+        size = cuddSwapInPlace(table,y_next,y,0);
         if (size == 0) goto ddExchangeOutOfMem;
         move = (Move *)cuddDynamicAllocNode(table);
         if (move == NULL) goto ddExchangeOutOfMem;
@@ -540,7 +540,7 @@ ddJumpingUp(
     moves = NULL;
     y = cuddNextLow(table,x);
     while (y >= x_low) {
-	size = cuddSwapInPlace(table,y,x);
+	size = cuddSwapInPlace(table,y,x,0);
 	if (size == 0) goto ddJumpingUpOutOfMem;
 	move = (Move *)cuddDynamicAllocNode(table);
 	if (move == NULL) goto ddJumpingUpOutOfMem;
@@ -597,7 +597,7 @@ ddJumpingDown(
     moves = NULL;
     y = cuddNextHigh(table,x);
     while (y <= x_high) {
-	size = cuddSwapInPlace(table,x,y);
+	size = cuddSwapInPlace(table,x,y,0);
 	if (size == 0) goto ddJumpingDownOutOfMem;
 	move = (Move *)cuddDynamicAllocNode(table);
 	if (move == NULL) goto ddJumpingDownOutOfMem;
@@ -684,7 +684,7 @@ siftBackwardProb(
     res = (int) (table->keys - table->isolated);
     for (move = moves; move != NULL; move = move->next) {
 	if (res == best_size) return(1);
-	res = cuddSwapInPlace(table,(int)move->x,(int)move->y);
+	res = cuddSwapInPlace(table,(int)move->x,(int)move->y,0);
 	if (!res) return(0);
     }
 
@@ -744,7 +744,7 @@ restoreOrder(
 #endif
 	y = cuddNextLow(table,x);
 	while (y >= i + lower) {
-	    size = cuddSwapInPlace(table,y,x);
+	    size = cuddSwapInPlace(table,y,x,0);
 	    if (size == 0) return(0);
 	    x = y;
 	    y = cuddNextLow(table,x);

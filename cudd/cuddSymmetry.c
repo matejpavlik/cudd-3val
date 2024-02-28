@@ -157,7 +157,7 @@ cuddSymmCheck(
   int  x,
   int  y)
 {
-    DdNode *f,*f0,*f1,*f01,*f00,*f11,*f10;
+    DdNode *f,*f0,*f1,*f01,*f00,*f11,*f10,*unknown;
     int comple;		/* f0 is complemented */
     int xsymmy;		/* x and y may be positively symmetric */
     int xsymmyp;	/* x and y may be negatively symmetric */
@@ -168,6 +168,7 @@ cuddSymmCheck(
     DdNodePtr *list;
     int slots;
     DdNode *sentinel = &(table->sentinel);
+    unknown = DD_UNKNOWN(table);
 #ifdef DD_DEBUG
     int xindex;
 #endif
@@ -218,8 +219,8 @@ cuddSymmCheck(
 		f01 = f00 = f0;
 	    }
 	    if (comple) {
-		f01 = Cudd_Not(f01);
-		f00 = Cudd_Not(f00);
+		f01 = Cudd_NotCond(f01,f01!=unknown);
+		f00 = Cudd_NotCond(f00,f00!=unknown);
 	    }
 
 	    if (f1 != DD_ONE(table) || f0 != DD_ONE(table) || f->ref != 1) {
@@ -1233,11 +1234,12 @@ ddSymmSiftingUp(
 		   table->subtables[y].next == (unsigned) y) {
 	    /* x and y have self symmetry */
 	    xindex = table->invperm[x];
-	    size = cuddSwapInPlace(table,x,y);
+	    size = cuddSwapInPlace(table,x,y,1);
 #ifdef DD_DEBUG
 	    assert(table->subtables[x].next == (unsigned) x);
 	    assert(table->subtables[y].next == (unsigned) y);
 #endif
+        if (size == -1) break; /* order constraint hit - stop sifting in this direction */
 	    if (size == 0) goto ddSymmSiftingUpOutOfMem;
 	    /* Update the lower bound. */
 	    if (cuddTestInteract(table,xindex,yindex)) {
@@ -1256,6 +1258,7 @@ ddSymmSiftingUp(
 	    if (size < limitSize) limitSize = size;
 	} else { /* Group move */
 	    size = ddSymmGroupMove(table,x,y,&moves);
+        if (size == -1) break; /* order constraint hit - stop sifting in this direction */
 	    if (size == 0) goto ddSymmSiftingUpOutOfMem;
 	    /* Update the lower bound. */
 	    z = moves->y;
@@ -1369,11 +1372,12 @@ ddSymmSiftingDown(
 		isolated = table->vars[yindex]->ref == 1;
 		R -= (int) table->subtables[y].keys - isolated;
 	    }
-	    size = cuddSwapInPlace(table,x,y);
+	    size = cuddSwapInPlace(table,x,y,1);
 #ifdef DD_DEBUG
 	    assert(table->subtables[x].next == (unsigned) x);
 	    assert(table->subtables[y].next == (unsigned) y);
 #endif
+        if (size == -1) break; /* order constraint hit - stop sifting in this direction */
 	    if (size == 0) goto ddSymmSiftingDownOutOfMem;
 	    move = (Move *) cuddDynamicAllocNode(table);
 	    if (move == NULL) goto ddSymmSiftingDownOutOfMem;
@@ -1398,6 +1402,7 @@ ddSymmSiftingDown(
 		z++;
 	    } while (z <= gybot);
 	    size = ddSymmGroupMove(table,x,y,&moves);
+        if (size == -1) break; /* order constraint hit - stop sifting in this direction */
 	    if (size == 0) goto ddSymmSiftingDownOutOfMem;
 	    if ((double) size > (double) limitSize * table->maxGrowth)
 		return(moves);
@@ -1467,10 +1472,19 @@ ddSymmGroupMove(
     ytop = y;
     ysize = ybot - ytop + 1;
 
+    /* Check if any variable from group x should stay above any variable from group y */
+    for (i = 0; i < ysize; i++) {
+        for (j = 0; j < xsize; j++) {
+            if (cuddVarOrderConstraintExists(table, table->invperm[x - j], table->invperm[y + i])) {
+                return(-1);
+            }
+        }
+    }
+
     /* Sift the variables of the second group up through the first group. */
     for (i = 1; i <= ysize; i++) {
 	for (j = 1; j <= xsize; j++) {
-	    size = cuddSwapInPlace(table,x,y);
+	    size = cuddSwapInPlace(table,x,y,0);
 	    if (size == 0) return(0);
 	    swapx = x; swapy = y;
 	    y = x;
@@ -1552,7 +1566,7 @@ ddSymmGroupMoveBackward(
     /* Sift the variables of the second group up through the first group. */
     for (i = 1; i <= ysize; i++) {
 	for (j = 1; j <= xsize; j++) {
-	    size = cuddSwapInPlace(table,x,y);
+	    size = cuddSwapInPlace(table,x,y,0);
 	    if (size == 0) return(0);
 	    y = x;
 	    x = cuddNextLow(table,y);
@@ -1613,7 +1627,7 @@ ddSymmSiftingBackward(
     for (move = moves; move != NULL; move = move->next) {
 	if (move->size == size) return(1);
 	if (table->subtables[move->x].next == move->x && table->subtables[move->y].next == move->y) {
-	    res = cuddSwapInPlace(table,(int)move->x,(int)move->y);
+	    res = cuddSwapInPlace(table,(int)move->x,(int)move->y,0);
 #ifdef DD_DEBUG
 	    assert(table->subtables[move->x].next == move->x);
 	    assert(table->subtables[move->y].next == move->y);
